@@ -1,8 +1,8 @@
-[![Linux GNU](https://github.com/NOAA-GSL/shallow-water-demo/actions/workflows/linux_gnu.yml/badge.svg?branch=develop)](https://github.com/NOAA-GSL/shallow-water-demo/actions/workflows/linux_gnu.yml)
-[![MacOS GNU](https://github.com/NOAA-GSL/shallow-water-demo/actions/workflows/macos_gnu.yml/badge.svg?branch=develop)](https://github.com/NOAA-GSL/shallow-water-demo/actions/workflows/macos_gnu.yml)
-[![Linux Intel](https://github.com/NOAA-GSL/shallow-water-demo/actions/workflows/linux_intel.yml/badge.svg?branch=develop)](https://github.com/NOAA-GSL/shallow-water-demo/actions/workflows/linux_intel.yml)
-[![MacOS Intel](https://github.com/NOAA-GSL/shallow-water-demo/actions/workflows/macos_intel.yml/badge.svg?branch=develop)](https://github.com/NOAA-GSL/shallow-water-demo/actions/workflows/macos_intel.yml)
-[![Docker Ubuntu Intel](https://github.com/NOAA-GSL/shallow-water-demo/actions/workflows/docker_intel.yml/badge.svg?branch=develop)](https://github.com/NOAA-GSL/shallow-water-demo/actions/workflows/docker_intel.yml)
+[![Linux GNU](https://github.com/NOAA-GSL/SENA-shallow-water/actions/workflows/linux_gnu.yml/badge.svg?branch=develop)](https://github.com/NOAA-GSL/SENA-shallow-water/actions/workflows/linux_gnu.yml)
+[![MacOS GNU](https://github.com/NOAA-GSL/SENA-shallow-water/actions/workflows/macos_gnu.yml/badge.svg?branch=develop)](https://github.com/NOAA-GSL/SENA-shallow-water/actions/workflows/macos_gnu.yml)
+[![Linux Intel](https://github.com/NOAA-GSL/SENA-shallow-water/actions/workflows/linux_intel.yml/badge.svg?branch=develop)](https://github.com/NOAA-GSL/SENA-shallow-water/actions/workflows/linux_intel.yml)
+[![MacOS Intel](https://github.com/NOAA-GSL/SENA-shallow-water/actions/workflows/macos_intel.yml/badge.svg?branch=develop)](https://github.com/NOAA-GSL/SENA-shallow-water/actions/workflows/macos_intel.yml)
+[![Docker Ubuntu Intel](https://github.com/NOAA-GSL/SENA-shallow-water/actions/workflows/docker_intel.yml/badge.svg?branch=develop)](https://github.com/NOAA-GSL/SENA-shallow-water/actions/workflows/docker_intel.yml)
 
 ```
 This repository is a scientific product and is not official communication
@@ -52,7 +52,7 @@ applications including 4D variational data assimilation.
 
 ## Contributing
 
-Please see the [Contributing Guide](https://github.com/NOAA-GSL/shallow-water-demo/blob/develop/CONTRIBUTING.md) for information about contributing to this respository.
+Please see the [Contributing Guide](https://github.com/NOAA-GSL/SENA-shallow-water/blob/develop/CONTRIBUTING.md) for information about contributing to this respository.
 
 ## Dependencies
 
