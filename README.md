@@ -52,7 +52,7 @@ applications including 4D variational data assimilation.
 
 ## Contributing
 
-Please see the [Contributing Guide](https://github.com/NOAA-GSL/SENA-shallow-water/blob/develop/CONTRIBUTING.md) for information about contributing to this respository.
+Please see the [Contributing Guide](https://github.com/NOAA-GSL/SENA-shallow-water/blob/main/CONTRIBUTING.md) for information about contributing to this respository.
 
 ## Dependencies
 
