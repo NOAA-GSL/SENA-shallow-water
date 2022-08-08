@@ -28,7 +28,7 @@ jobs:
       
       # Unlink gcc - to work around gcc link issues
       - name: Unlink gcc
-        run: brew unlink gcc@8 && brew unlink gcc@9
+        run: brew unlink gcc@9
 
       # Install OpenMPI
       - name: Install OpenMPI
