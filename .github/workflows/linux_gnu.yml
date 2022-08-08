@@ -2,9 +2,9 @@ name: Linux GNU
 # triggered events (push, pull_request) for the develop branch
 on:
   push:
-    branches: [ develop ]
+    branches: [ develop, main ]
   pull_request:
-    branches: [ develop ]
+    branches: [ develop, main ]
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel

@@ -2,9 +2,9 @@ name: MacOS Intel
 # triggered events (push, pull_request) for the develop branch
 on:
   push:
-    branches: [ develop ]
+    branches: [ develop, main ]
   pull_request:
-    branches: [ develop ]
+    branches: [ develop, main ]
   workflow_dispatch:
 
 defaults:
