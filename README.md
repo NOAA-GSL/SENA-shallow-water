@@ -31,6 +31,7 @@ This repository is intended to be an educational tool for demonstrating:
  - Creation of a portable build system
  - Use of test driven development (TDD) to build an application test suite
  - Automated testing and continuous integration (CI)
+ - How to use [GT4Py](https://github.com/ai2cm/gt4py.git)
 
 This demonstration project uses a "toy" shallow water model implementation
 based on work by Steve McHale ([Shallow Water Wave CFD (Tsunami Modelling),
