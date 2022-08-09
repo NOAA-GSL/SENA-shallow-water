@@ -1,9 +1,9 @@
-# Contributing to shallow-water-demo
+# Contributing to SENA-shallow-water
 
 NOTE: If you are reading this with a plain text editor, please note that this 
 document is formatted with Markdown syntax elements.  See 
 https://www.markdownguide.org/cheat-sheet/ for more information. It is
-recommended to view [this document](https://github.com/NOAA-GSL/shallow-water-demo/blob/develop/CONTRIBUTING.md)
+recommended to view [this document](https://github.com/NOAA-GSL/SENA-shallow-water/blob/main/CONTRIBUTING.md)
 on GitHub.
 
 
@@ -19,7 +19,7 @@ on GitHub.
 
 ## How to Contribute
 
-Contributions to shallow-water-demo will be accepted via [pull request](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request),
+Contributions to SENA-shallow-water will be accepted via [pull request](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request),
 either from branches in this repository, or from a fork of this repository. Pull
 requests will be reviewed and evaluated based on the technical merit of the
 proposed changes as well as conformance to the branch managment and style guidelines

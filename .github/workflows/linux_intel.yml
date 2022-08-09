@@ -1,0 +1,146 @@
+name: Linux Intel
+# triggered events (push, pull_request) for the develop branch
+on:
+  push:
+    branches: [ develop, main ]
+  pull_request:
+    branches: [ develop, main ]
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash -leo pipefail {0}
+
+jobs:
+
+  ubuntu_build:
+    name: Ubuntu Intel Build
+    runs-on: ubuntu-latest
+
+    env:
+      LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17764/l_HPCKit_p_2021.2.0.2997_offline.sh
+      CC: icc
+      FC: ifort
+      CXX: icpc
+
+    steps:
+      # Cache Intel HPC Toolkit
+      - name: Cache Intel HPC Toolkit
+        id: cache-intel-hpc-toolkit
+        uses: actions/cache@v2
+        with:
+          path: /opt/intel/oneapi
+          key: install-${{ env.LINUX_HPCKIT_URL }}-all
+
+      # Install Intel HPC Toolkit
+      - name: Install Intel HPC Toolkit
+        if: steps.cache-intel-hpc-toolkit.outputs.cache-hit != 'true'
+        run: |
+          curl --output webimage.sh --url "$LINUX_HPCKIT_URL" --retry 5 --retry-delay 5
+          chmod +x webimage.sh
+          ./webimage.sh -x -f webimage_extracted --log extract.log
+          rm -rf webimage.sh
+          WEBIMAGE_NAME=$(ls -1 webimage_extracted/)
+          sudo webimage_extracted/"$WEBIMAGE_NAME"/bootstrapper -s --action install --components=all --eula=accept --continue-with-optional-error=yes --log-dir=.
+          cat /opt/intel/oneapi/logs/installer.install.intel.oneapi.lin.hpckit.*
+          rm -rf webimage_extracted
+
+      # Check location of installed Intel compilers
+      - name: Check compiler install
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          which icc
+          which ifort
+
+      # Cache NetCDF
+      - name: Cache NetCDF
+        id: cache-netcdf
+        uses: actions/cache@v2
+        with:
+          path: ~/netcdf
+          key: netcdf-c-4.7.4-${{ runner.os }}-intel
+
+      # Build HDF5
+      - name: build-hdf5
+        if: steps.cache-netcdf.outputs.cache-hit != 'true'
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          export CC=mpiicc
+          export FC=mpif90
+          export CXX=mpicxx
+          wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.7/src/hdf5-1.10.7.tar.gz &> /dev/null
+          tar -xzf hdf5-1.10.7.tar.gz
+          pushd hdf5-1.10.7
+          ./configure --prefix=${HOME}/netcdf --enable-parallel --disable-tools --disable-fortran --disable-cxx
+          make -j2
+          make install
+        
+      # Build NetCDF-C   
+      - name: Build NetCDF-C
+        if: steps.cache-netcdf.outputs.cache-hit != 'true'
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          export CC=mpiicc
+          export CPPFLAGS=-I${HOME}/netcdf/include
+          export LDFLAGS=-L${HOME}/netcdf/lib
+          wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.4.tar.gz &> /dev/null
+          tar -xzf v4.7.4.tar.gz
+          pushd netcdf-c-4.7.4
+          ./configure --prefix=${HOME}/netcdf --disable-dap --disable-utilities
+          make -j2
+          make install
+
+      # Build NetCDF-Fortran
+      - name: build-netcdf-fortran
+        if: steps.cache-netcdf.outputs.cache-hit != 'true'
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${HOME}/netcdf/lib"
+          export PATH="${HOME}/netcdf/bin:$PATH"
+          export CC=mpiicc
+          export FC=mpiifort
+          export CPPFLAGS=-I${HOME}/netcdf/include
+          export LDFLAGS=-L${HOME}/netcdf/lib
+          wget https://github.com/Unidata/netcdf-fortran/archive/v4.5.3.tar.gz &> /dev/null
+          tar -xzf v4.5.3.tar.gz
+          pushd netcdf-fortran-4.5.3
+          ./configure --prefix=${HOME}/netcdf
+          make -j2
+          make install
+
+      # Get NetCDF versions
+      - name: Get NetCDF version
+        run: |
+          export PATH="${HOME}/netcdf/bin:$PATH"
+          nc-config --version
+          nf-config --version
+
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Test debug mode
+      - name: Test Shallow Water Debug
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          rm -rf build
+          mkdir build
+          cd build
+          export CC=icc
+          export FC=ifort
+          cmake -DCMAKE_BUILD_TYPE=debug -DCMAKE_PREFIX_PATH='~;~/netcdf' ..
+          make VERBOSE=1
+          ctest --output-on-failure
+
+      # Test release mode
+      - name: Test Shallow Water Release
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          rm -rf build
+          mkdir build
+          cd build
+          export CC=icc
+          export FC=ifort
+          cmake -DCMAKE_BUILD_TYPE=release -DCMAKE_PREFIX_PATH='~;~/netcdf' ..
+          make VERBOSE=1
+          ctest --output-on-failure

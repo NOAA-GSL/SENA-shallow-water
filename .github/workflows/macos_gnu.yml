@@ -1,0 +1,69 @@
+name: MacOS GNU
+# triggered events (push, pull_request) for the develop branch
+on:
+  push:
+    branches: [ develop, main ]
+  pull_request:
+    branches: [ develop, main ]
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# This workflow contains multiple jobs for different operating systems
+jobs:
+
+  macos_Build:
+    name: Mac OS GNU Build
+    # The type of runner that the job will run on
+    runs-on: macos-10.15
+
+    env:
+      # Work around bug in OpenMPI: See https://github.com/open-mpi/ompi/issues/6518
+      OMPI_MCA_btl: "self,tcp"
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout repository (and LFS objects)
+        uses: actions/checkout@v2
+      
+      # Unlink gcc - to work around gcc link issues
+      - name: Unlink gcc
+        run: brew unlink gcc@9
+
+      # Install OpenMPI
+      - name: Install OpenMPI
+        run: brew install open-mpi
+
+      # Install netCDF
+      - name: Install netCDF 
+        run: HOMEBREW_NO_AUTO_UPDATE=1 && brew install netcdf 
+      
+      # Get NetCDF versions
+      - name: Get NetCDF version
+        run: |
+          nc-config --version
+          nf-config --version
+
+      # Test debug mode 
+      - name: Test Shallow Water Debug 
+        run: |
+          rm -rf build
+          mkdir build
+          cd build
+          export CC=gcc-10
+          export FC=gfortran-10          
+          cmake -DCMAKE_BUILD_TYPE=debug -DMPIEXEC_PREFLAGS=--oversubscribe ..
+          make
+          ctest --output-on-failure
+          
+      # Test release mode 
+      - name: Test Shallow Water Release
+        run: |
+          rm -rf build
+          mkdir build
+          cd build
+          export CC=gcc-10
+          export FC=gfortran-10           
+          cmake -DCMAKE_BUILD_TYPE=release -DMPIEXEC_PREFLAGS=--oversubscribe ..
+          make
+          ctest --output-on-failure

@@ -1,0 +1,181 @@
+name: MacOS Intel
+# triggered events (push, pull_request) for the develop branch
+on:
+  push:
+    branches: [ develop, main ]
+  pull_request:
+    branches: [ develop, main ]
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash -leo pipefail {0}
+
+jobs:
+
+  macos_build:
+    name: MacOS Intel Build with OpenMPI
+    runs-on: macos-latest
+
+    env:
+      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17643/m_HPCKit_p_2021.2.0.2903_offline.dmg
+      CC: icc
+      FC: ifort
+      CXX: icpc
+      # Work around bug in OpenMPI: See https://github.com/open-mpi/ompi/issues/6518
+      OMPI_MCA_btl: "self,tcp"
+
+    steps:
+      # Prepare for Intel cache restore
+      - name: Prepare for Intel cache restore
+        run: |
+          sudo mkdir -p /opt/intel
+          sudo chown $USER /opt/intel
+
+      # Cache Intel HPC Toolkit
+      - name: Cache Intel HPC Toolkit
+        id: cache-intel-hpc-toolkit
+        uses: actions/cache@v2
+        with:
+          path: /opt/intel/oneapi
+          key: install-${{ env.MACOS_HPCKIT_URL }}-all
+
+      # Install Intel HPC Toolkit
+      - name: Install Intel HPC Toolkit
+        if: steps.cache-intel-hpc-toolkit.outputs.cache-hit != 'true'
+        run: |
+          curl --output webimage.dmg --url "$MACOS_HPCKIT_URL" --retry 5 --retry-delay 5
+          hdiutil attach webimage.dmg
+          sudo /Volumes/$(basename $MACOS_HPCKIT_URL .dmg)/bootstrapper.app/Contents/MacOS/bootstrapper -s --action install --components=all --eula=accept --continue-with-optional-error=yes --log-dir=.
+          cat /opt/intel/oneapi/logs/installer.install.intel.oneapi.mac.hpckit.*
+          hdiutil detach /Volumes/$(basename "$MACOS_HPCKIT_URL" .dmg) -quiet
+
+      # Check location of installed Intel compilers
+      - name: Check compiler install
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          which icc
+          which ifort
+
+      # Cache OpenMPI
+      - name: Cache OpenMPI
+        uses: actions/cache@v2
+        id:   cache-openmpi
+        with:
+          path: ~/openmpi
+          key:  openmpi-4.0.2-${{ runner.os }}-intel
+
+      # Install OpenMPI
+      - name: Install OpenMPI
+        if: ${{ steps.cache-openmpi.outputs.cache-hit != 'true' }}
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          export CC="icc -m64"
+          export FC="ifort -m64"
+          wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.2.tar.gz
+          tar -xvf ./openmpi-4.0.2.tar.gz
+          cd openmpi-4.0.2
+          ./configure --prefix=${HOME}/openmpi
+          make -j2
+          sudo make install
+
+      # Cache NetCDF
+      - name: Cache NetCDF
+        id: cache-netcdf
+        uses: actions/cache@v2
+        with:
+          path: ~/netcdf
+          key: netcdf-c-4.7.4-${{ runner.os }}-intel
+
+      # Build HDF5
+      - name: Build HDF5
+        if: steps.cache-netcdf.outputs.cache-hit != 'true'
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          export PATH="${HOME}/openmpi/bin:$PATH"
+          export CC=mpicc
+          export FC=mpif90
+          export CXX=mpicxx
+          wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.7/src/hdf5-1.10.7.tar.gz &> /dev/null
+          tar -xzf hdf5-1.10.7.tar.gz
+          pushd hdf5-1.10.7
+          ./configure --prefix=${HOME}/netcdf --enable-parallel --disable-tools --disable-fortran --disable-cxx
+          make -j2 VERBOSE=1
+          make install
+
+      # Build NetCDF-C   
+      - name: Build NetCDF-C
+        if: steps.cache-netcdf.outputs.cache-hit != 'true'
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          export PATH="${HOME}/openmpi/bin:$PATH"
+          export CC=mpicc
+          export CPPFLAGS=-I${HOME}/netcdf/include
+          export LDFLAGS=-L${HOME}/netcdf/lib
+          wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.4.tar.gz &> /dev/null 
+          wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.4.tar.gz &> /dev/null
+          tar -xzf v4.7.4.tar.gz
+          pushd netcdf-c-4.7.4
+          ./configure --prefix=${HOME}/netcdf --disable-dap --disable-utilities
+          make -j2
+          make install
+
+      # Build NetCDF-Fortran
+      - name: Build NetCDF-Fortran
+        if: steps.cache-netcdf.outputs.cache-hit != 'true'
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${HOME}/netcdf/lib"
+          export PATH="${HOME}/netcdf/bin:$PATH"
+          export PATH="${HOME}/openmpi/bin:$PATH"
+          export CC=mpicc
+          export FC=mpif90
+          export CPPFLAGS=-I${HOME}/netcdf/include
+          export LDFLAGS=-L${HOME}/netcdf/lib
+          wget https://github.com/Unidata/netcdf-fortran/archive/v4.5.3.tar.gz &> /dev/null
+          tar -xzf v4.5.3.tar.gz
+          pushd netcdf-fortran-4.5.3
+          ./configure --prefix=${HOME}/netcdf
+          make -j2
+          make install
+
+      # Get NetCDF versions
+      - name: Get NetCDF version
+        run: |
+          export PATH="${HOME}/netcdf/bin:$PATH"
+          nc-config --version
+          nf-config --version
+
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Test debug mode
+      - name: Test Shallow Water Debug
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          export PATH="${HOME}/openmpi/bin:$PATH"
+          export PATH="${HOME}/netcdf/bin:$PATH"
+          rm -rf build
+          mkdir build
+          cd build
+          export CC=icc
+          export FC=ifort
+          cmake -DCMAKE_BUILD_TYPE=debug -DCMAKE_PREFIX_PATH='~/netcdf;~/openmpi' -DMPIEXEC_PREFLAGS=--oversubscribe ..
+          make VERBOSE=1
+          ctest --output-on-failure
+
+      # Test release mode
+      - name: Test Shallow Water Release
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          export PATH="${HOME}/openmpi/bin:$PATH"
+          export PATH="${HOME}/netcdf/bin:$PATH"
+          rm -rf build
+          mkdir build
+          cd build
+          export CC=icc
+          export FC=ifort
+          cmake -DCMAKE_BUILD_TYPE=release -DCMAKE_PREFIX_PATH='~/netcdf;~/openmpi' -DMPIEXEC_PREFLAGS=--oversubscribe ..
+          make VERBOSE=1
+          ctest --output-on-failure
