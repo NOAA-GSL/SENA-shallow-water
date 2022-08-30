@@ -7,8 +7,6 @@ module_shallow_water_model_config.f90
 module_shallow_water_geometry.f90
 module_shallow_water_state.f90
 module_shallow_water_model.f90
-module_shallow_water_tl.f90
-module_shallow_water_adj.f90
 )
 
 add_library( shallow_water
