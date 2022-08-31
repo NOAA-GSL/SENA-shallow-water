@@ -50,10 +50,10 @@ jobs:
 
       # Setup Python
       - name: Get Python version
-        uses: actions/setup-python@v4
-          with:
+      - uses: actions/setup-python@v4
+        with:
             python-version: '3.9' 
-        run: python --version
+      - run: python --version
 
       # Install Serialbox
       - name: Install Serialbox
