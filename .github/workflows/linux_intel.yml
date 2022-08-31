@@ -167,7 +167,6 @@ jobs:
           cd build
           export CC=icc
           export FC=ifort
-#         export SERIALBOX_ROOT=${HOME}/serialbox/install
           cmake -DCMAKE_BUILD_TYPE=debug -DCMAKE_PREFIX_PATH='~;~/netcdf;~/boost;~/serialbox/install' -DGT4PY=on ..
           make
           ctest --output-on-failure
