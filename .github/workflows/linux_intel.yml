@@ -124,8 +124,8 @@ jobs:
           wget https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz &> /dev/null
           tar -xzf boost_1_80_0.tar.gz
           pushd boost_1_80_0
-          ./bootstrap.sh --prefix="${HOME}/boost toolset=intel"
-          ./b2 --prefix="${HOME}/boost" toolset=intel install
+          ./bootstrap.sh toolset=intel --prefix=${HOME}/boost
+          ./b2 toolset=intel install --prefix=${HOME}/boost
 #          mkdir include
 #          mv boost include
 #          popd
