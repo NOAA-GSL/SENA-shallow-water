@@ -15,8 +15,12 @@ if(GT4PY)
   list(TRANSFORM shallow_water_model_src_files PREPEND ${PP_OUTPUT}/)
 endif()
 
-add_library( shallow_water
+add_library( ${PROJECT_NAME}
              ${shallow_water_model_src_files} )
+
+if(GT4PY)
+  target_link_libraries(${PROJECT_NAME} Serialbox::SerialboxFortranStatic)
+endif()
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU AND CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
     target_compile_options(shallow_water PUBLIC $<$<COMPILE_LANGUAGE:Fortran>:-fallow-argument-mismatch>)
