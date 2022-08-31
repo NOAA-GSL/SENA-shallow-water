@@ -19,7 +19,7 @@ add_library( ${PROJECT_NAME}
              ${shallow_water_model_src_files} )
 
 if(GT4PY)
-  target_link_libraries(${PROJECT_NAME} Serialbox::SerialboxFortranStatic)
+  target_link_libraries(${PROJECT_NAME} PUBLIC Serialbox::SerialboxFortranStatic)
 endif()
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU AND CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
