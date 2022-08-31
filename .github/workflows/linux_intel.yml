@@ -118,15 +118,22 @@ jobs:
       # Install Boost
       - name: Install Boost
         run: |
+          source /opt/intel/oneapi/setvars.sh
+          export CC=icc
+          export FC=ifort
           wget https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz &> /dev/null
           tar -xzf boost_1_80_0.tar.gz
           pushd boost_1_80_0
-          ./bootstrap.sh
-          ./b2 headers
-          mkdir include
-          mv boost include
-          popd
-          mv boost_1_80_0 $HOME
+          ./bootstrap.sh --prefix="${HOME}/boost"
+          ./b2 --prefix="${HOME}/boost" tooset=intel install
+#          mkdir include
+#          mv boost include
+#          popd
+#          mv boost_1_80_0 $HOME/boost
+#          ls $HOME
+#          ls $HOME/boost
+#          ls $HOME/boost/include
+#          ls $HOME/boost/include/boost
 
       # Setup Python
       - name: Set up Python
@@ -144,7 +151,8 @@ jobs:
           cd build
           export CC=icc
           export FC=ifort
-          cmake ../ -DSERIALBOX_ENABLE_FORTRAN=ON -DCMAKE_PREFIX_PATH='~;~/boost_1_80_1'
+          export BOOST_ROOT
+          cmake ../ -DSERIALBOX_ENABLE_FORTRAN=ON -DCMAKE_PREFIX_PATH='~;~/boost'
           make
           make install
 
