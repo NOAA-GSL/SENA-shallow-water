@@ -44,6 +44,42 @@ jobs:
           nc-config --version
           nf-config --version
 
+      # Install Boost
+      - name: Install Boost
+        run: sudo apt-get install libboost-all-dev -y
+
+      # Setup Python
+      - name: Get Python version
+        uses: actions/setup-python@v4
+          with:
+            python-version: '3.9' 
+        run: python --version
+
+      # Install Serialbox
+      - name: Install Serialbox
+        run: |
+          git clone https://github.com/eth-cscs/serialbox2.git serialbox
+          cd serialbox
+          mkdir build
+          cd build
+          export CC=gcc
+          export FC=gfortran
+          cmake ../ -DSERIALBOX_ENABLE_FORTRAN=ON
+          make
+          make install
+
+      # Test GT4Py option
+      - name: Test GT4Py option
+        run: |
+          rm -rf build
+          mkdir build
+          cd build
+          export CC=gcc
+          export FC=gfortran
+          cmake -DCMAKE_BUILD_TYPE=debug -DMPIEXEC_PREFLAGS=--oversubscribe -DGT4PY=on ..
+          make
+          ctest --output-on-failure
+  
       # Test debug mode
       - name: Test Shallow Water Debug
         run: |
