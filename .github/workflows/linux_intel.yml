@@ -140,8 +140,17 @@ jobs:
         with:
           python-version: '3.9' 
 
+      # Cache Serialbox
+      - name: Cache Serialbox
+        id: cache-serialbox
+        uses: actions/cache@v2
+        with:
+          path: ~/serialbox
+          key: serialbox-2.2.0-${{ runner.os }}-intel
+
       # Install Serialbox
       - name: Install Serialbox
+        if: steps.cache-serialbox.outputs.cache-hit != 'true'
         run: |
           source /opt/intel/oneapi/setvars.sh
           git clone https://github.com/eth-cscs/serialbox2.git ${HOME}/serialbox
