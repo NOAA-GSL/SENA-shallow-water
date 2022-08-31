@@ -1,35 +1,3 @@
-
-#list( APPEND shallow_water_model_src_files
-#module_netcdf_utils.f90
-#module_shallow_water_kind.f90
-#module_shallow_water_geometry_config.f90
-#module_shallow_water_model_config.f90
-#module_shallow_water_geometry.f90
-#module_shallow_water_state.f90
-#module_shallow_water_model.f90
-#)
-#
-#list( APPEND shallow_water_model_src_files_ser
-#serialbox_pp/module_netcdf_utils.f90
-#serialbox_pp/module_shallow_water_kind.f90
-#serialbox_pp/module_shallow_water_geometry_config.f90
-#serialbox_pp/module_shallow_water_model_config.f90
-#serialbox_pp/module_shallow_water_geometry.f90
-#serialbox_pp/module_shallow_water_state.f90
-#serialbox_pp/module_shallow_water_model.f90
-#)
-#
-#set(PP_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/serialbox_pp)
-#serialbox_run_pp_ser(SOURCES ${shallow_water_model_src_files}
-#                     OUTPUT_DIR ${PP_OUTPUT})
-#
-#add_library( shallow_water_ser
-#             ${shallow_water_model_src_files_ser}  )
-#
-#add_library( shallow_water
-#             ${shallow_water_model_src_files} )
-
-
 list( APPEND shallow_water_model_src_files
 module_netcdf_utils.f90
 module_shallow_water_kind.f90
@@ -46,9 +14,6 @@ if(GT4PY)
                        OUTPUT_DIR ${PP_OUTPUT})
   list(TRANSFORM shallow_water_model_src_files PREPEND ${PP_OUTPUT}/)
 endif()
-
-#add_library( shallow_water_ser
-#             ${shallow_water_model_src_files_ser}  )
 
 add_library( shallow_water
              ${shallow_water_model_src_files} )
