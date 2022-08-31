@@ -115,17 +115,24 @@ jobs:
           nc-config --version
           nf-config --version
 
+      # Cache Boost
+      - name: Cache Boost
+        id: cache-boost
+        uses: actions/cache@v2
+        with:
+          path: ~/boost
+          key: boost_1_80_0-${{ runner.os }}-gcc
+
       # Install Boost
       - name: Install Boost
+        if: steps.cache-boost.outputs.cache-hit != 'true'
         run: |
-          source /opt/intel/oneapi/setvars.sh
-          export CC=icc
-          export FC=ifort
           wget https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz &> /dev/null
           tar -xzf boost_1_80_0.tar.gz
           pushd boost_1_80_0
-          ./bootstrap.sh toolset=intel --prefix=${HOME}/boost
-          ./b2 toolset=intel install --prefix=${HOME}/boost
+          # We only need the headers so just use the default gcc toolset
+          ./bootstrap.sh --prefix=${HOME}/boost
+          ./b2 install --prefix=${HOME}/boost
 #          mkdir include
 #          mv boost include
 #          popd
