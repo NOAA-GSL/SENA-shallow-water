@@ -115,9 +115,54 @@ jobs:
           nc-config --version
           nf-config --version
 
+      # Install Boost
+      - name: Install Boost
+        run: |
+          wget https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz &> /dev/null
+          tar -xzf boost_1_80_0.tar.gz
+          pushd boost_1_80_0
+          ./bootstrap.sh
+          ./b2 headers
+          mkdir include
+          mv boost include
+          popd
+          mv boost_1_80_0 $HOME
+
+      # Setup Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9' 
+      - run: python --version
+
+      # Install Serialbox
+      - name: Install Serialbox
+        run: |
+          git clone https://github.com/eth-cscs/serialbox2.git serialbox
+          cd serialbox
+          mkdir build
+          cd build
+          export CC=icc
+          export FC=ifort
+          cmake ../ -DSERIALBOX_ENABLE_FORTRAN=ON -DCMAKE_PREFIX_PATH='~;~/boost_1_80_1'
+          make
+          make install
+
       # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v2
+
+      # Test GT4Py option
+      - name: Test GT4Py option
+        run: |
+          rm -rf build
+          mkdir build
+          cd build
+          export CC=icc
+          export FC=ifort
+          cmake -DCMAKE_BUILD_TYPE=debug -DCMAKE_PREFIX_PATH='~;~/netcdf' -DGT4PY=on ..
+          make
+          ctest --output-on-failure
 
       # Test debug mode
       - name: Test Shallow Water Debug
