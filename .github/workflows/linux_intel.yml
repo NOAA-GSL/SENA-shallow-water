@@ -133,11 +133,11 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.9' 
-      - run: python --version
 
       # Install Serialbox
       - name: Install Serialbox
         run: |
+          source /opt/intel/oneapi/setvars.sh
           git clone https://github.com/eth-cscs/serialbox2.git serialbox
           cd serialbox
           mkdir build
