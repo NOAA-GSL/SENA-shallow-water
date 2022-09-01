@@ -115,24 +115,9 @@ jobs:
           nc-config --version
           nf-config --version
 
-      # Cache Boost
-      - name: Cache Boost
-        id: cache-boost
-        uses: actions/cache@v2
-        with:
-          path: ~/boost
-          key: boost_1_80_0-${{ runner.os }}-gcc
-
-      # Install Boost
+      # Install Boost (We only need headers so no need to build with Intel)
       - name: Install Boost
-        if: steps.cache-boost.outputs.cache-hit != 'true'
-        run: |
-          wget https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz &> /dev/null
-          tar -xzf boost_1_80_0.tar.gz
-          pushd boost_1_80_0
-          # We only need the headers so just use the default gcc toolset
-          ./bootstrap.sh --prefix=${HOME}/boost
-          ./b2 install --prefix=${HOME}/boost
+        run: sudo apt-get install libboost-all-dev -y
 
       # Setup Python
       - name: Set up Python

@@ -8,10 +8,34 @@ RUN apt-get update -y && \
 	cmake \
         gnupg \
         libarchive13 \
+        libboost-all-dev \
+        libffi-dev \
+        libgdbm-dev \
+        libncurses5-dev \
+        libnss3-dev \
+        libsqlite3-dev \
+        libssl-dev \
+        libssl-dev \
+        libbz2-dev \
         m4 \
         pkg-config \
+        software-properties-common \
+        wget \
         zlib1g \
         zlib1g-dev
+
+# Install Python 3.9
+ARG python_url=https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tgz
+ADD $python_url /
+RUN file=$(basename "$python_url") && \
+    tar -xzf $file && \
+    cd Python-3.9.1 && \
+    ./configure --enable-optimizations && \
+    make -j2 && \
+    make install && \
+    cd .. && \
+    rm -f "$file" && \
+    rm -rf Python-3.9.1
 
 # Add apt repository public key
 ARG url=https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
@@ -34,35 +58,38 @@ RUN apt-get update -y && \
         intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic
 
 # Set /opt/intel/oneapi/setvars.sh variables
-ENV ACL_BOARD_VENDOR_PATH=/opt/Intel/OpenCLFPGA/oneAPI/Boards
-ENV CLASSPATH=/opt/intel/oneapi/mpi/2021.2.0//lib/mpi.jar
-ENV CMAKE_PREFIX_PATH=/opt/intel/oneapi/tbb/2021.2.0/env/..:
-ENV CPATH=/opt/intel/oneapi/tbb/2021.2.0/env/../include:/opt/intel/oneapi/mpi/2021.2.0//include:/opt/intel/oneapi/dev-utilities/2021.2.0/include:/opt/intel/oneapi/compiler/2021.2.0/linux/include
-ENV FI_PROVIDER_PATH=/opt/intel/oneapi/mpi/2021.2.0//libfabric/lib/prov:/usr/lib64/libfabric
-ENV INFOPATH=/opt/intel/oneapi/debugger/10.1.1/documentation/info/
-ENV INTELFPGAOCLSDKROOT=/opt/intel/oneapi/compiler/2021.2.0/linux/lib/oclfpga
-ENV INTEL_PYTHONHOME=/opt/intel/oneapi/debugger/10.1.1/dep
-ENV I_MPI_ROOT=/opt/intel/oneapi/mpi/2021.2.0
-ENV LD_LIBRARY_PATH=/opt/intel/oneapi/tbb/2021.2.0/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.2.0//libfabric/lib:/opt/intel/oneapi/mpi/2021.2.0//lib/release:/opt/intel/oneapi/mpi/2021.2.0//lib:/opt/intel/oneapi/debugger/10.1.1/dep/lib:/opt/intel/oneapi/debugger/10.1.1/libipt/intel64/lib:/opt/intel/oneapi/debugger/10.1.1/gdb/intel64/lib:/opt/intel/oneapi/compiler/2021.2.0/linux/lib:/opt/intel/oneapi/compiler/2021.2.0/linux/lib/x64:/opt/intel/oneapi/compiler/2021.2.0/linux/lib/emu:/opt/intel/oneapi/compiler/2021.2.0/linux/lib/oclfpga/host/linux64/lib:/opt/intel/oneapi/compiler/2021.2.0/linux/lib/oclfpga/linux64/lib:/opt/intel/oneapi/compiler/2021.2.0/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/2021.2.0/linux/compiler/lib
-ENV LIBRARY_PATH=/opt/intel/oneapi/tbb/2021.2.0/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.2.0//libfabric/lib:/opt/intel/oneapi/mpi/2021.2.0//lib/release:/opt/intel/oneapi/mpi/2021.2.0//lib:/opt/intel/oneapi/compiler/2021.2.0/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/2021.2.0/linux/lib
-ENV MANPATH=/opt/intel/oneapi/mpi/2021.2.0/man:/opt/intel/oneapi/debugger/10.1.1/documentation/man::/opt/intel/oneapi/compiler/2021.2.0/documentation/en/man/common::
-ENV OCL_ICD_FILENAMES=libintelocl_emu.so:libalteracl.so:/opt/intel/oneapi/compiler/2021.2.0/linux/lib/x64/libintelocl.so
+ENV TBBROOT=/opt/intel/oneapi/tbb/2021.6.0/env/..
 ENV ONEAPI_ROOT=/opt/intel/oneapi
-ENV PATH=/opt/intel/oneapi/mpi/2021.2.0//libfabric/bin:/opt/intel/oneapi/mpi/2021.2.0//bin:/opt/intel/oneapi/dev-utilities/2021.2.0/bin:/opt/intel/oneapi/debugger/10.1.1/gdb/intel64/bin:/opt/intel/oneapi/compiler/2021.2.0/linux/lib/oclfpga/llvm/aocl-bin:/opt/intel/oneapi/compiler/2021.2.0/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/2021.2.0/linux/bin/intel64:/opt/intel/oneapi/compiler/2021.2.0/linux/bin:/opt/intel/oneapi/compiler/2021.2.0/linux/ioc/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENV SETVARS_COMPLETED=1
-ENV SETVARS_VARS_PATH=/opt/intel/oneapi/tbb/latest/env/vars.sh
-ENV TBBROOT=/opt/intel/oneapi/tbb/2021.2.0/env/..
+ENV PKG_CONFIG_PATH=/opt/intel/oneapi/tbb/2021.6.0/env/../lib/pkgconfig:/opt/intel/oneapi/mpi/2021.6.0/lib/pkgconfig:/opt/intel/oneapi/compiler/2022.1.0/lib/pkgconfig
+ENV FPGA_VARS_DIR=/opt/intel/oneapi/compiler/2022.1.0/linux/lib/oclfpga
+ENV I_MPI_ROOT=/opt/intel/oneapi/mpi/2021.6.0
+ENV FI_PROVIDER_PATH=/opt/intel/oneapi/mpi/2021.6.0//libfabric/lib/prov:/usr/lib64/libfabric
+ENV DIAGUTIL_PATH=/opt/intel/oneapi/debugger/2021.6.0/sys_check/debugger_sys_check.py:/opt/intel/oneapi/compiler/2022.1.0/sys_check/sys_check.sh
+ENV MANPATH=/opt/intel/oneapi/mpi/2021.6.0/man:/opt/intel/oneapi/debugger/2021.6.0/documentation/man:/opt/intel/oneapi/compiler/2022.1.0/documentation/en/man/common::
+ENV GDB_INFO=/opt/intel/oneapi/debugger/2021.6.0/documentation/info/
+ENV CMAKE_PREFIX_PATH=/opt/intel/oneapi/tbb/2021.6.0/env/..:/opt/intel/oneapi/compiler/2022.1.0/linux/IntelDPCPP
+ENV CMPLR_ROOT=/opt/intel/oneapi/compiler/2022.1.0
+ENV INFOPATH=/opt/intel/oneapi/debugger/2021.6.0/gdb/intel64/lib
+ENV LIBRARY_PATH=/opt/intel/oneapi/tbb/2021.6.0/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.6.0//libfabric/lib:/opt/intel/oneapi/mpi/2021.6.0//lib/release:/opt/intel/oneapi/mpi/2021.6.0//lib:/opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/2022.1.0/linux/lib
+ENV OCL_ICD_FILENAMES=libintelocl_emu.so:libalteracl.so:/opt/intel/oneapi/compiler/2022.1.0/linux/lib/x64/libintelocl.so
+ENV CLASSPATH=/opt/intel/oneapi/mpi/2021.6.0//lib/mpi.jar
+ENV INTELFPGAOCLSDKROOT=/opt/intel/oneapi/compiler/2022.1.0/linux/lib/oclfpga
+ENV LD_LIBRARY_PATH=/opt/intel/oneapi/tbb/2021.6.0/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.6.0//libfabric/lib:/opt/intel/oneapi/mpi/2021.6.0//lib/release:/opt/intel/oneapi/mpi/2021.6.0//lib:/opt/intel/oneapi/debugger/2021.6.0/gdb/intel64/lib:/opt/intel/oneapi/debugger/2021.6.0/libipt/intel64/lib:/opt/intel/oneapi/debugger/2021.6.0/dep/lib:/opt/intel/oneapi/compiler/2022.1.0/linux/lib:/opt/intel/oneapi/compiler/2022.1.0/linux/lib/x64:/opt/intel/oneapi/compiler/2022.1.0/linux/lib/oclfpga/host/linux64/lib:/opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin
+ENV NLSPATH=/opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin/locale/%l_%t/%N
+ENV PATH=/opt/intel/oneapi/mpi/2021.6.0//libfabric/bin:/opt/intel/oneapi/mpi/2021.6.0//bin:/opt/intel/oneapi/dev-utilities/2021.6.0/bin:/opt/intel/oneapi/debugger/2021.6.0/gdb/intel64/bin:/opt/intel/oneapi/compiler/2022.1.0/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/2022.1.0/linux/bin/intel64:/opt/intel/oneapi/compiler/2022.1.0/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV INTEL_PYTHONHOME=/opt/intel/oneapi/debugger/2021.6.0/dep
+ENV CPATH=/opt/intel/oneapi/tbb/2021.6.0/env/../include:/opt/intel/oneapi/mpi/2021.6.0//include:/opt/intel/oneapi/dev-utilities/2021.6.0/include
 
 # Set compilers to MPI wrappers
 ENV CC='mpiicc'
 ENV FC='mpiifort'
 ENV CXX='mpiicpc'
 
-# Install HDF5
+## Install HDF5
 ARG hdf5_url=https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.7/src/hdf5-1.10.7.tar.gz
 ADD $hdf5_url /
 RUN file=$(basename "$hdf5_url") && \
-    tar -xzvf $file && \
+    tar -xzf $file && \
     cd hdf5-1.10.7 && \
     ./configure --prefix=/opt/hdf5 --enable-parallel --disable-tools --disable-fortran --disable-cxx && \
     make -j2 && \
@@ -75,10 +102,10 @@ RUN file=$(basename "$hdf5_url") && \
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/hdf5/lib"
 ENV CPPFLAGS="-I/opt/hdf5/include"
 ENV LDFLAGS="-L/opt/hdf5/lib"
-ARG netcdf_c_url=https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-c-4.7.4.tar.gz
+ARG netcdf_c_url=https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.7.4.tar.gz
 ADD $netcdf_c_url /
 RUN file=$(basename "$netcdf_c_url") && \
-    tar -xzvf $file && \
+    tar -xzf $file && \
     cd netcdf-c-4.7.4 && \
     ./configure --prefix=/opt/netcdf --disable-dap --disable-utilities && \
     make -j2 && \
@@ -94,7 +121,7 @@ ENV LDFLAGS="${LDFLAGS} -L/opt/netcdf/lib"
 ARG netcdf_fortran_url=https://github.com/Unidata/netcdf-fortran/archive/v4.5.3.tar.gz
 ADD $netcdf_fortran_url /
 RUN file=$(basename "$netcdf_fortran_url") && \
-    tar -xzvf $file && \
+    tar -xzf $file && \
     cd netcdf-fortran-4.5.3 && \
     ./configure --prefix=/opt/netcdf && \
     make -j2 && \
@@ -103,5 +130,20 @@ RUN file=$(basename "$netcdf_fortran_url") && \
     rm -f "$file" && \
     rm -rf netcdf-fortran-4.5.3
 
+# Install Serialbox
+ARG serialbox_url=https://github.com/GridTools/serialbox/archive/refs/tags/v2.6.1.tar.gz
+ADD $serialbox_url /opt
+RUN file=$(basename "$serialbox_url") && \
+    cd /opt && \
+    tar -xzf $file && \
+    cd serialbox-2.6.1 && \
+    mkdir build && \
+    cd build && \
+    cmake ../ -DSERIALBOX_ENABLE_FORTRAN=ON && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -f "$file"
+
 # Add HDF5 and NetCDF to CMAKE_PREFIX_PATH
-ENV CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/hdf5:/opt/netcdf
+ENV CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/hdf5:/opt/netcdf:/opt/serialbox-2.6.1/install
