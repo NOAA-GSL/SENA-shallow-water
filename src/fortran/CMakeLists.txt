@@ -8,11 +8,14 @@ module_shallow_water_state.f90
 module_shallow_water_model.f90
 )
 
+set(SWMAIN shallow_water.f90)
+
 if(GT4PY)
   set(PP_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/serialbox_pp)
-  serialbox_run_pp_ser(SOURCES ${shallow_water_model_src_files}
+  serialbox_run_pp_ser(SOURCES ${shallow_water_model_src_files} shallow_water.f90
                        OUTPUT_DIR ${PP_OUTPUT})
   list(TRANSFORM shallow_water_model_src_files PREPEND ${PP_OUTPUT}/)
+  set(SWMAIN ${PP_OUTPUT}/shallow_water.f90)
 endif()
 
 add_library( ${PROJECT_NAME}
@@ -39,8 +42,12 @@ set_target_properties(${PROJECT_NAME} PROPERTIES Fortran_MODULE_DIRECTORY ${CMAK
 target_include_directories(${PROJECT_NAME} INTERFACE
                                 $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/${MODULE_DIR}>)
 
-add_executable(shallow_water.x shallow_water.f90)
+add_executable(shallow_water.x ${SWMAIN})
 target_link_libraries(shallow_water.x ${PROJECT_NAME})
+if(GT4PY)
+  target_link_libraries(shallow_water.x Serialbox::SerialboxFortranStatic)
+  set_target_properties(shallow_water.x PROPERTIES LINKER_LANGUAGE Fortran)
+endif()
 
 install(TARGETS shallow_water.x
         DESTINATION ${PROJECT_SOURCE_DIR}/exe)
