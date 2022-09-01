@@ -26,6 +26,10 @@ jobs:
     - name: Start the Intel Oneapi Container
       run: docker run -d -t --name intel-oneapi -v /home/runner/work/SENA-shallow-water/SENA-shallow-water:/SENA-shallow-water/ noaagsl/ubuntu-intel-oneapi
 
+    # Test GT4PY option
+    - name: Test Shallow Water GT4PY
+      run: docker exec intel-oneapi bash -c "cd SENA-shallow-water; mkdir build; cd build; cmake .. -DCMAKE_BUILD_TYPE=debug -DGT4PY=on; make VERBOSE=1; ctest --output-on-failure"
+
     # Test debug mode
     - name: Test Shallow Water Debug
       run: docker exec intel-oneapi bash -c "cd SENA-shallow-water; mkdir build; cd build; cmake .. -DCMAKE_BUILD_TYPE=debug; make VERBOSE=1; ctest --output-on-failure"

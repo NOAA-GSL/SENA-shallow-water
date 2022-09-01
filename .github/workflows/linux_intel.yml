@@ -115,9 +115,55 @@ jobs:
           nc-config --version
           nf-config --version
 
+      # Install Boost (We only need headers so no need to build with Intel)
+      - name: Install Boost
+        run: sudo apt-get install libboost-all-dev -y
+
+      # Setup Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9' 
+
+      # Cache Serialbox
+      - name: Cache Serialbox
+        id: cache-serialbox
+        uses: actions/cache@v2
+        with:
+          path: ~/serialbox
+          key: serialbox-2.2.0-${{ runner.os }}-intel
+
+      # Install Serialbox
+      - name: Install Serialbox
+        if: steps.cache-serialbox.outputs.cache-hit != 'true'
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          git clone https://github.com/eth-cscs/serialbox2.git ${HOME}/serialbox
+          cd ${HOME}/serialbox
+          mkdir build
+          cd build
+          export CC=icc
+          export FC=ifort
+          cmake ../ -DSERIALBOX_ENABLE_FORTRAN=ON -DCMAKE_PREFIX_PATH='~;~/boost'
+          make
+          make install
+
       # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v2
+
+      # Test GT4Py option
+      - name: Test GT4Py option
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          rm -rf build
+          mkdir build
+          cd build
+          export CC=icc
+          export FC=ifort
+          cmake -DCMAKE_BUILD_TYPE=debug -DCMAKE_PREFIX_PATH='~;~/netcdf;~/boost;~/serialbox/install' -DGT4PY=on ..
+          make
+          ctest --output-on-failure
 
       # Test debug mode
       - name: Test Shallow Water Debug
