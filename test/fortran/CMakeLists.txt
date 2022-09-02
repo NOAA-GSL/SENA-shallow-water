@@ -5,18 +5,48 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../test_input/test_shallow_water_reader.n
 add_library(${PROJECT_NAME}_test_utilities SHARED test_utilities.f90)
 target_link_libraries(${PROJECT_NAME}_test_utilities PUBLIC ${PROJECT_NAME})
 
+list( APPEND shallow_water_test_src_files
+test_shallow_water_geometry_config_arglist.f90
+test_shallow_water_geometry_config_nlfile.f90
+test_shallow_water_geometry_config_nlunit.f90
+test_shallow_water_model_config_arglist.f90
+test_shallow_water_model_config_nlfile.f90
+test_shallow_water_model_config_nlunit.f90
+test_shallow_water_geometry.f90
+test_shallow_water_state_init_default.f90
+test_shallow_water_state_init_optional.f90
+test_shallow_water_state_halo.f90
+test_shallow_water_state_read.f90
+test_shallow_water_state_write.f90
+test_shallow_water_model_init.f90
+test_shallow_water_model_adv_nsteps.f90
+test_shallow_water_model_regression.f90
+test_shallow_water_tl_init.f90
+test_shallow_water_tl_adv_nsteps.f90
+test_shallow_water_adj_init.f90
+test_shallow_water_adj_adv_nsteps.f90
+)
+
+if(GT4PY)
+  set(PP_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/serialbox_pp)
+  serialbox_run_pp_ser(SOURCES ${shallow_water_test_src_files}
+                       OUTPUT_DIR ${PP_OUTPUT})
+endif()
+
+foreach(test_src ${shallow_water_test_src_files})
+  string(REPLACE ".f90" ".x" test_exe ${test_src})
+  if(GT4PY)
+    add_executable( ${test_exe} ${PP_OUTPUT}/${test_src} )
+    target_link_libraries( ${test_exe} Serialbox::SerialboxFortranStatic)
+  else()
+    add_executable( ${test_exe} ${test_src} )
+  endif()
+  target_link_libraries( ${test_exe} shallow_water_test_utilities )
+endforeach()
+
 #######################################
 ## Shallow water geometry config tests
 #######################################
-add_executable( test_shallow_water_geometry_config_arglist.x test_shallow_water_geometry_config_arglist.f90 )
-target_link_libraries( test_shallow_water_geometry_config_arglist.x shallow_water_test_utilities )
-
-add_executable( test_shallow_water_geometry_config_nlfile.x test_shallow_water_geometry_config_nlfile.f90 )
-target_link_libraries( test_shallow_water_geometry_config_nlfile.x shallow_water_test_utilities )
-
-add_executable( test_shallow_water_geometry_config_nlunit.x test_shallow_water_geometry_config_nlunit.f90 )
-target_link_libraries( test_shallow_water_geometry_config_nlunit.x shallow_water_test_utilities )
-
 add_test( NAME shallow_water_geometry_config_arglist
           COMMAND bash -c "${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS} ./test_shallow_water_geometry_config_arglist.x" )
 
@@ -29,15 +59,6 @@ add_test( NAME shallow_water_geometry_config_nlunit
 #######################################
 ## Shallow water model config tests
 #######################################
-add_executable( test_shallow_water_model_config_arglist.x test_shallow_water_model_config_arglist.f90 )
-target_link_libraries( test_shallow_water_model_config_arglist.x shallow_water_test_utilities )
-
-add_executable( test_shallow_water_model_config_nlfile.x test_shallow_water_model_config_nlfile.f90 )
-target_link_libraries( test_shallow_water_model_config_nlfile.x shallow_water_test_utilities )
-
-add_executable(	test_shallow_water_model_config_nlunit.x test_shallow_water_model_config_nlunit.f90 )
-target_link_libraries( test_shallow_water_model_config_nlunit.x shallow_water_test_utilities )
-
 add_test( NAME shallow_water_model_config_arglist
           COMMAND bash -c "${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS} ./test_shallow_water_model_config_arglist.x" )
 
@@ -50,9 +71,6 @@ add_test( NAME shallow_water_model_config_nlunit
 #######################################
 ## Shallow water geometry tests
 #######################################
-add_executable( test_shallow_water_geometry.x test_shallow_water_geometry.f90 )
-target_link_libraries( test_shallow_water_geometry.x shallow_water_test_utilities )
-
 add_test( NAME shallow_water_geometry_1
           COMMAND bash -c "${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS} ./test_shallow_water_geometry.x" )
 
@@ -68,21 +86,6 @@ add_test( NAME shallow_water_geometry_9
 #######################################
 ## Shallow water state tests
 #######################################
-add_executable( test_shallow_water_state_init_default.x test_shallow_water_state_init_default.f90 )
-target_link_libraries( test_shallow_water_state_init_default.x shallow_water_test_utilities )
-
-add_executable( test_shallow_water_state_init_optional.x test_shallow_water_state_init_optional.f90 )
-target_link_libraries( test_shallow_water_state_init_optional.x shallow_water_test_utilities )
-
-add_executable( test_shallow_water_state_halo.x test_shallow_water_state_halo.f90 )
-target_link_libraries( test_shallow_water_state_halo.x shallow_water_test_utilities )
-
-add_executable( test_shallow_water_state_read.x test_shallow_water_state_read.f90 )
-target_link_libraries( test_shallow_water_state_read.x shallow_water_test_utilities )
-
-add_executable( test_shallow_water_state_write.x test_shallow_water_state_write.f90 )
-target_link_libraries( test_shallow_water_state_write.x shallow_water_test_utilities )
-
 add_test( NAME shallow_water_state_init_default
           COMMAND bash -c "${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS} ./test_shallow_water_state_init_default.x" )
 
@@ -128,15 +131,6 @@ add_test( NAME shallow_water_state_write_9
 #######################################
 ## Shallow water model tests
 #######################################
-add_executable( test_shallow_water_model_init.x test_shallow_water_model_init.f90 )
-target_link_libraries( test_shallow_water_model_init.x shallow_water_test_utilities )
-
-add_executable( test_shallow_water_model_adv_nsteps.x test_shallow_water_model_adv_nsteps.f90 )
-target_link_libraries( test_shallow_water_model_adv_nsteps.x shallow_water_test_utilities )
-
-add_executable( test_shallow_water_model_regression.x test_shallow_water_model_regression.f90 )
-target_link_libraries( test_shallow_water_model_regression.x shallow_water_test_utilities )
-
 add_test( NAME shallow_water_model_init
           COMMAND bash -c "${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS} ./test_shallow_water_model_init.x" )
 
@@ -167,12 +161,6 @@ add_test( NAME shallow_water_model_regression_9
 #######################################
 ## Shallow water tangent linear tests
 #######################################
-add_executable( test_shallow_water_tl_init.x test_shallow_water_tl_init.f90 )
-target_link_libraries( test_shallow_water_tl_init.x shallow_water_test_utilities )
-
-add_executable( test_shallow_water_tl_adv_nsteps.x test_shallow_water_tl_adv_nsteps.f90 )
-target_link_libraries( test_shallow_water_tl_adv_nsteps.x shallow_water_test_utilities )
-
 add_test( NAME shallow_water_tl_init
           COMMAND bash -c "${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS} ./test_shallow_water_tl_init.x" )
 
@@ -191,12 +179,6 @@ add_test( NAME shallow_water_tl_adv_nsteps_9
 #######################################
 ## Shallow water adjoint tests
 #######################################
-add_executable( test_shallow_water_adj_init.x test_shallow_water_adj_init.f90 )
-target_link_libraries( test_shallow_water_adj_init.x shallow_water_test_utilities )
-
-add_executable( test_shallow_water_adj_adv_nsteps.x test_shallow_water_adj_adv_nsteps.f90 )
-target_link_libraries( test_shallow_water_adj_adv_nsteps.x shallow_water_test_utilities )
-
 add_test( NAME shallow_water_adj_init
           COMMAND bash -c "${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${MPIEXEC_PREFLAGS} ./test_shallow_water_adj_init.x" )
 

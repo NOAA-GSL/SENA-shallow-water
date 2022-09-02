@@ -49,6 +49,9 @@ program Test_Shallow_Water_Model_Regression
   ! Start MPI
   call MPI_Init(ierr)
   
+  ! Initialize Serialbox
+  !$ser init directory='./serialbox_data' prefix='test_shallow_water_model_regression'
+
   ! Initialize error count to 0
   errors = 0
 
@@ -109,6 +112,9 @@ program Test_Shallow_Water_Model_Regression
     end if
 
   end if
+
+  ! Clean up Serialbox
+  !$ser cleanup
 
   ! Shut down MPI
   call MPI_Finalize(ierr)
