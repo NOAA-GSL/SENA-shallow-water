@@ -53,6 +53,9 @@ program Test_Shallow_Water_ADJ_Adv_Nsteps
   ! Initialize MPI
   call MPI_Init(ierr)
 
+  ! Initialize Serialbox
+  !$ser init directory='./serialbox_data' prefix='test_shallow_water_adj_adv_nsteps'
+
   ! Create a geometry configuration as specified by the namelist
   geometry_config = shallow_water_geometry_config_type(nx, ny, xmax, ymax)
 
@@ -179,6 +182,9 @@ program Test_Shallow_Water_ADJ_Adv_Nsteps
       call MPI_Abort(MPI_COMM_WORLD, 1, ierr)
     end if
   end if
+
+  ! Clean up Serialbox
+  !$ser cleanup
 
   ! Shut down MPI
   call MPI_Finalize(ierr)

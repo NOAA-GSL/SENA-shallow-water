@@ -51,6 +51,9 @@ program Test_Shallow_Water_TL_Adv_Nsteps
   ! Start MPI
   call MPI_Init(ierr)
 
+  ! Initialize Serialbox
+  !$ser init directory='./serialbox_data' prefix='test_shallow_water_tl_adv_nsteps'
+
   ! Get our MPI rank
   call MPI_Comm_rank(MPI_COMM_WORLD, myrank, ierr)
 
@@ -212,6 +215,9 @@ program Test_Shallow_Water_TL_Adv_Nsteps
   if (errors > 0) then
     call MPI_Abort(MPI_COMM_WORLD, errors, ierr)
   end if
+
+  ! Clean up Serialbox
+  !$ser cleanup
 
   ! Shut down MPI
   call MPI_Finalize(ierr)

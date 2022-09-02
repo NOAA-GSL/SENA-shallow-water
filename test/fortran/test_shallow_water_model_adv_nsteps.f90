@@ -42,6 +42,9 @@ program Test_Shallow_Water_Model_Adv_Nsteps
 
   call MPI_Init(ierr)
 
+  ! Initialize Serialbox
+  !$ser init directory='./serialbox_data' prefix='test_shallow_water_model_adv_nsteps'
+
   ! Initialize error count to 0
   errors = 0
 
@@ -123,6 +126,9 @@ program Test_Shallow_Water_Model_Adv_Nsteps
   if (errors > 0) then
     call MPI_Abort(MPI_COMM_WORLD, errors, ierr)
   end if
+
+  ! Clean up Serialbox
+  !$ser cleanup
 
   call MPI_Finalize(ierr)
 

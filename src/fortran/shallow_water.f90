@@ -52,6 +52,9 @@ program Tsunami
   ! Start up MPI
   call MPI_Init(ierr)
 
+  ! Initialize Serialbox
+  !$ser init directory='./serialbox_data' prefix='shallow_water'
+
   ! Get our rank
   call MPI_Comm_rank(MPI_COMM_WORLD, myrank, ierr)
 
@@ -162,6 +165,9 @@ program Tsunami
 !    call model%print()
 
   end do
+
+  ! Clean up Serialbox
+  !$ser cleanup
 
   ! Shut down MPI
   call MPI_Finalize(ierr)
