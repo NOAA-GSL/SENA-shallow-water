@@ -167,10 +167,14 @@ contains
     integer                   :: xts, xte, yts, yte
     integer                   :: xms, xme, yms, yme
     integer                   :: north, south, west, east
-    real(r8kind)              :: dx, dy, maxdt
+    real(r8kind)              :: dx, dy, maxdt, local_dt
     real(r8kind), allocatable :: u_new(:,:)
     real(r8kind), allocatable :: v_new(:,:)
     real(r8kind), allocatable :: h_new(:,:)
+    real(r8kind), allocatable :: local_b(:,:)
+    real(r8kind), allocatable :: local_u(:,:)
+    real(r8kind), allocatable :: local_v(:,:)
+    real(r8kind), allocatable :: local_h(:,:)
 
     ! Get grid spacing
     dx = this%geometry%get_dx()
@@ -214,11 +218,31 @@ contains
     allocate(v_new(xps:xpe, yps:ype))
     allocate(h_new(xps:xpe, yps:ype))
 
+    ! Make local copies of u,v,h dt & b for Serialization Tests
+    local_u = state%u
+    local_v = state%v
+    local_h = state%h
+    local_dt = this%dt 
+    allocate(local_b, SOURCE=this%b)
+
+
     ! Move the model state n steps into the future
     do n=1,nsteps
 
       ! Exchange halos
       call state%exchange_halo()
+
+      !*** Serialbox calls for initialization***
+      !$ser init directory='./serialbox_data' prefix='update_model' unique_id=.true.
+      !$ser mode write
+      !$ser on
+
+      !*** Serialbox calls to create a savepoint to save initial starting data***
+      !$ser savepoint update_boundaries-IN
+      !$ser data xps=xps xpe=xpe yps=yps ype=ype xms=xms xme=xme yms=yms yme=yme
+      !$ser data north=north south=south west=west east=east 
+      !$ser data local_u=local_u local_v=local_v local_h=local_h
+      !$ser data u_new=u_new v_new=v_new h_new=h_new
 
       ! Update the domain boundaries
       call this%update_boundaries_model(                          &
@@ -231,18 +255,32 @@ contains
                                         u_new, v_new, h_new       &
                                        )
 
+      !$ser savepoint update_boundaries-OUT
+      !$ser data u_new=u_new v_new=v_new h_new=h_new
+     
+      !$ser savepoint update_interior-IN
+      !$ser data xps=xps xpe=xpe yps=yps ype=ype xts=xts xte=xte yts=yts yte=yte 
+      !$ser data xms=xms xme=xme yms=yms yme=yme
+      !$ser data local_u=local_u local_v=local_v local_h=local_h
+      !$ser data local_b=local_b dx=dx dy=dy local_dt=local_dt
+      !$ser data u_new=u_new v_new=v_new h_new=h_new 
+
       ! Update the domain interior
       call this%update_interior_model(                     &
                                       xps, xpe, yps, ype,  &
                                       xts, xte, yts, yte,  &
                                       xms, xme, yms, yme,  &
-                                      state%u,             &
-                                      state%v,             &
-                                      state%h,             &
-                                      this%b,              &
+                                      local_u,             &
+                                      local_v,             &
+                                      local_h,             &
+                                      local_b,             &
                                       u_new, v_new, h_new, &
-                                      dx, dy, this%dt      &
+                                      dx, dy, local_dt     &
                                      )
+
+      !$ser savepoint update_interior-OUT
+      !$ser data u_new=u_new v_new=v_new h_new=h_new
+      !$ser cleanup 
 
       ! Update state with new state
       do j = yps, ype

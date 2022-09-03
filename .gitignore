@@ -1,3 +1,11 @@
 # Ignore emacs backup files
 *~
 #*
+
+*.dat
+*.envrc
+*.direnv
+*.nc
+
+exe/
+build/
