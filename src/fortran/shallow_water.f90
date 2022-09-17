@@ -48,6 +48,7 @@ program Tsunami
   ! For initializing a tsunami pulse
   real(r8kind), allocatable :: h(:,:)
   real(r8kind)              :: dx, dy, xmid, ymid, dsqr, sigma
+  integer                   :: yps_local, ype_local, xps_local, xpe_local
 
   ! Start up MPI
   call MPI_Init(ierr)
@@ -125,6 +126,18 @@ program Tsunami
     xmid = geometry%get_xmax() / 2.0_r8kind
     ymid = geometry%get_ymax() / 2.0_r8kind
     sigma = floor(geometry%get_xmax() / 20.0_r8kind)
+    yps_local = geometry%get_yps()
+    ype_local = geometry%get_ype()
+    xps_local = geometry%get_xps()
+    xpe_local = geometry%get_xpe()
+
+    !$ser mode write
+    !$ser on
+    !$ser savepoint tsunami_pulse-IN
+    !$ser data dx=dx dy=dy xmid=xmid ymid=ymid sigma=sigma 
+    !$ser data yps_local=yps_local ype_local=ype_local xps_local=xps_local xpe_local=xpe_local
+    !$ser data h0=h0 h=h run_steps=run_steps
+
     do j = geometry%get_yps(), geometry%get_ype()
       do i = geometry%get_xps(), geometry%get_xpe()
         dsqr = (dble(i - 1) * dx - xmid)**2 + (dble(j - 1) * dy - ymid)**2
@@ -132,6 +145,9 @@ program Tsunami
       end do
     end do
     state = shallow_water_state_type(geometry, h=h)
+    
+    !$ser savepoint tsunami_pulse-OUT
+    !$ser data h=h
 
   end if
 
@@ -150,8 +166,12 @@ program Tsunami
   ! Run the model
   do t = 0, run_steps, output_interval_steps
 
+
+
     ! Advance the model to next output interval
     call model%adv_nsteps(state, min(output_interval_steps, run_steps - t))
+
+
 
     ! Write out model state if needed
     if (output_interval_steps <= run_steps) then

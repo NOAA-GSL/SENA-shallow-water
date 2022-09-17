@@ -230,7 +230,7 @@ contains
     do n=1,nsteps
 
       ! Exchange halos
-      call state%exchange_halo()
+      ! call state%exchange_halo()
 
       !*** Serialbox calls for initialization***
       !$ser init directory='./serialbox_data' prefix='update_model' unique_id=.true.
@@ -238,11 +238,13 @@ contains
       !$ser on
 
       !*** Serialbox calls to create a savepoint to save initial starting data***
+      !$ser verbatim if (n == 1) then
       !$ser savepoint update_boundaries-IN
       !$ser data xps=xps xpe=xpe yps=yps ype=ype xms=xms xme=xme yms=yms yme=yme
       !$ser data north=north south=south west=west east=east 
       !$ser data local_u=local_u local_v=local_v local_h=local_h
-      !$ser data u_new=u_new v_new=v_new h_new=h_new
+      !$ser data u_new=u_new v_new=v_new h_new=h_new nhalo=xts-xps
+      !$ser verbatim endif
 
       ! Update the domain boundaries
       call this%update_boundaries_model(                          &
@@ -255,15 +257,23 @@ contains
                                         u_new, v_new, h_new       &
                                        )
 
+      ! $ser verbatim if (n == 11) then
       !$ser savepoint update_boundaries-OUT
-      !$ser data u_new=u_new v_new=v_new h_new=h_new
+      !$ser data u_new_out_boundaries=u_new v_new_out_boundaries=v_new h_new_out_boundaries=h_new
+      ! $ser verbatim endif
      
+      !$ser verbatim if (n == 1) then
       !$ser savepoint update_interior-IN
       !$ser data xps=xps xpe=xpe yps=yps ype=ype xts=xts xte=xte yts=yts yte=yte 
       !$ser data xms=xms xme=xme yms=yms yme=yme
       !$ser data local_u=local_u local_v=local_v local_h=local_h
       !$ser data local_b=local_b dx=dx dy=dy local_dt=local_dt
       !$ser data u_new=u_new v_new=v_new h_new=h_new 
+
+      ! Serialize indexing variables for ease of creating GT4Py storages
+      ! nhalo can be calculated by the starting index of the interior points of this grid patch (xts) minus starting index of for this grid patch (xps)
+      !$ser data nhalo=xts-xps  dtdx=local_dt/dx dtdy=local_dt/dy 
+      !$ser verbatim endif
 
       ! Update the domain interior
       call this%update_interior_model(                     &
@@ -278,8 +288,10 @@ contains
                                       dx, dy, local_dt     &
                                      )
 
+      ! $ser verbatim if (n == 11) then
       !$ser savepoint update_interior-OUT
-      !$ser data u_new=u_new v_new=v_new h_new=h_new
+      !$ser data u_new_out_interior=u_new v_new_out_interior=v_new h_new_out_interior=h_new
+      ! $ser verbatim endif
       !$ser cleanup 
 
       ! Update state with new state
@@ -374,6 +386,9 @@ contains
         h_new(i, yps) =  h(i, yps + 1);
         u_new(i, yps) =  u(i, yps + 1);
         v_new(i, yps) = -v(i, yps + 1);
+        ! h_new(i, yps) = 1.;
+        ! u_new(i, yps) = 1.;
+        ! v_new(i, yps) = 1.;
       end do
     end if
 
@@ -383,6 +398,9 @@ contains
         h_new(i, ype)   =  h(i, ype - 1);
         u_new(i, ype)   =  u(i, ype - 1);
         v_new(i, ype)   = -v(i, ype - 1);
+        ! h_new(i, ype)   = 1.;
+        ! u_new(i, ype)   = 1.;
+        ! v_new(i, ype)   = 1.;
       end do
     end if
 
@@ -392,6 +410,9 @@ contains
         h_new(xps, j)   =  h(xps + 1, j);
         u_new(xps, j)   = -u(xps + 1, j);
         v_new(xps, j)   =  v(xps + 1, j);
+        ! h_new(xps, j)   = 1.;
+        ! u_new(xps, j)   = 1.;
+        ! v_new(xps, j)   = 1.;
       end do
     end if
 
@@ -401,6 +422,9 @@ contains
         h_new(xpe, j) =  h(xpe - 1, j);
         u_new(xpe, j) = -u(xpe - 1, j);
         v_new(xpe, j) =  v(xpe - 1, j);
+        ! h_new(xpe, j) = 1.;
+        ! u_new(xpe, j) = 1.;
+        ! v_new(xpe, j) = 1.;
       end do
     end if
 
