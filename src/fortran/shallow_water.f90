@@ -52,11 +52,11 @@ program Tsunami
   ! Start up MPI
   call MPI_Init(ierr)
 
-  ! Initialize Serialbox
-  !$ser init directory='./serialbox_data' prefix='shallow_water'
-
   ! Get our rank
   call MPI_Comm_rank(MPI_COMM_WORLD, myrank, ierr)
+
+  ! Initialize Serialbox
+  !$ser init directory='./serialbox_data' prefix='shallow_water'
 
   ! Read namelist from stdin
   if (myrank == 0) then
@@ -162,7 +162,7 @@ program Tsunami
 
     end if
 
-!    call model%print()
+    write(*,*) "t = ",t
 
   end do
 

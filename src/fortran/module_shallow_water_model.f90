@@ -167,10 +167,11 @@ contains
     integer                   :: xts, xte, yts, yte
     integer                   :: xms, xme, yms, yme
     integer                   :: north, south, west, east
-    real(r8kind)              :: dx, dy, maxdt
+    real(r8kind)              :: dx, dy, maxdt, dt
     real(r8kind), allocatable :: u_new(:,:)
     real(r8kind), allocatable :: v_new(:,:)
     real(r8kind), allocatable :: h_new(:,:)
+    real(r8kind), allocatable :: b_local(:,:)
 
     ! Get grid spacing
     dx = this%geometry%get_dx()
@@ -214,6 +215,21 @@ contains
     allocate(v_new(xps:xpe, yps:ype))
     allocate(h_new(xps:xpe, yps:ype))
 
+    ! Make a local copy of b so that SerialBox can serialize it
+    allocate(b_local, SOURCE=this%b)
+
+    ! Make a local copy of dt so that SerialBox can serialize it
+    dt = this%dt
+
+    !$ser savepoint input_data
+    !$ser data xps=xps xpe=xpe yps=yps ype=ype
+    !$ser data xms=xms xme=xme yms=yms yme=yme
+    !$ser data xts=xts xte=xte yts=yts yte=yte
+    !$ser data north=north south=south west=west east=east
+    !$ser data dx=dx dy=dy dt=dt
+    !$ser data u=state%u v=state%v h=state%h b=b_local
+    !$ser data u_new=u_new v_new=v_new h_new=h_new
+
     ! Move the model state n steps into the future
     do n=1,nsteps
 
@@ -231,6 +247,10 @@ contains
                                         u_new, v_new, h_new       &
                                        )
 
+      !$ser savepoint boundaries_output
+      !$ser data u_new=u_new v_new=v_new h_new=h_new
+
+
       ! Update the domain interior
       call this%update_interior_model(                     &
                                       xps, xpe, yps, ype,  &
@@ -243,6 +263,9 @@ contains
                                       u_new, v_new, h_new, &
                                       dx, dy, this%dt      &
                                      )
+
+      !$ser savepoint interior_output
+      !$ser data u_new=u_new v_new=v_new h_new=h_new
 
       ! Update state with new state
       do j = yps, ype
@@ -257,6 +280,9 @@ contains
       call state%advance_clock(this%dt)
 
     end do
+
+    !$ser savepoint output_data
+    !$ser data u=state%u v=state%v h=state%h
 
   end subroutine adv_nsteps_model
 
