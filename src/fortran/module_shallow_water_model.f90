@@ -230,10 +230,10 @@ contains
     do n=1,nsteps
 
       ! Exchange halos
-      ! call state%exchange_halo()
+      call state%exchange_halo()
 
       !*** Serialbox calls for initialization***
-      !$ser init directory='./serialbox_data' prefix='update_model' unique_id=.true.
+      ! $ser init directory='./serialbox_data' prefix='update_model' unique_id=.true.
       !$ser mode write
       !$ser on
 
@@ -257,10 +257,8 @@ contains
                                         u_new, v_new, h_new       &
                                        )
 
-      ! $ser verbatim if (n == 11) then
       !$ser savepoint update_boundaries-OUT
       !$ser data u_new_out_boundaries=u_new v_new_out_boundaries=v_new h_new_out_boundaries=h_new
-      ! $ser verbatim endif
      
       !$ser verbatim if (n == 1) then
       !$ser savepoint update_interior-IN
@@ -288,10 +286,9 @@ contains
                                       dx, dy, local_dt     &
                                      )
 
-      ! $ser verbatim if (n == 11) then
+
       !$ser savepoint update_interior-OUT
       !$ser data u_new_out_interior=u_new v_new_out_interior=v_new h_new_out_interior=h_new
-      ! $ser verbatim endif
       !$ser cleanup 
 
       ! Update state with new state

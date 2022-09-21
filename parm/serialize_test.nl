@@ -1,6 +1,6 @@
 &geometry_parm
- nx = 151,
- ny = 151,
+ nx = 7,
+ ny = 7,
  xmax = 100000.0,
  ymax = 100000.0,
 /
@@ -15,7 +15,7 @@
 
 &runtime
  start_step = 0,
- run_steps = 3,
- output_interval_steps = 3,
+ run_steps = 100,
+ output_interval_steps = 100,
  io_format = 'NETCDF',
 /

@@ -2,10 +2,10 @@
 *~
 #*
 
-*.dat
+# Ignore Direnv and .env files
 *.envrc
 *.direnv
-*.nc
 
+# Ignore executable and build directories
 exe/
 build/

@@ -1,0 +1,294 @@
+{
+  "archive_name": "Binary",
+  "archive_version": 0,
+  "fields_table": {
+    "dtdx": [
+      [
+        0,
+        "D4B75FE880389313AFA891FA35949A9CB7F5A2A408195ADD9E1B3E9C3CDD98"
+      ]
+    ],
+    "dtdy": [
+      [
+        0,
+        "D4B75FE880389313AFA891FA35949A9CB7F5A2A408195ADD9E1B3E9C3CDD98"
+      ]
+    ],
+    "dx": [
+      [
+        0,
+        "D1BD32D58CBB78136D8054D24575A840A6D97579E1A2ADF2A8967AF0F42E702B"
+      ]
+    ],
+    "dy": [
+      [
+        0,
+        "D1BD32D58CBB78136D8054D24575A840A6D97579E1A2ADF2A8967AF0F42E702B"
+      ]
+    ],
+    "east": [
+      [
+        0,
+        "40B7B493B1BC2D2DFD5149B67C2B19A0A27C1CD4428A92D9AC44FE38AC81189F"
+      ]
+    ],
+    "h": [
+      [
+        0,
+        "4D75D4C793452DB17F8C91C5D3525E6A73BE62262B6B1A48A386204C7342DA79"
+      ],
+      [
+        392,
+        "CD841C574D37B9EA37A7F3D85F9D65CE67364DB5950CA9EF085B5C37EA65"
+      ]
+    ],
+    "h0": [
+      [
+        0,
+        "F73B7D90D296E951EAE5642C43E56E0EFAAD2AD17DC7B5030DB8125913523F5"
+      ]
+    ],
+    "h_new": [
+      [
+        0,
+        "CBCFC77D827896ED9F88FF78FB463E5255BAB7A8EC98212CFF14F7BB98971"
+      ],
+      [
+        392,
+        "CD841C574D37B9EA37A7F3D85F9D65CE67364DB5950CA9EF085B5C37EA65"
+      ]
+    ],
+    "h_new_out_boundaries": [
+      [
+        0,
+        "CD841C574D37B9EA37A7F3D85F9D65CE67364DB5950CA9EF085B5C37EA65"
+      ]
+    ],
+    "h_new_out_interior": [
+      [
+        0,
+        "A79FB1EE87C7E57A874DE1CC81D1FED8D1D6C4FE8C57B2FDE99C15A58026"
+      ]
+    ],
+    "local_b": [
+      [
+        0,
+        "9568EFEDFEC65794F47712B6191E0158AEF7E06E6A23B7C4B5FF8E9D4FF2C"
+      ]
+    ],
+    "local_dt": [
+      [
+        0,
+        "D7545FD1C92414474DE3D6C7EEDEE880AA77A84A82938BCA78B20ACD6F4AB44"
+      ]
+    ],
+    "local_h": [
+      [
+        0,
+        "CD841C574D37B9EA37A7F3D85F9D65CE67364DB5950CA9EF085B5C37EA65"
+      ]
+    ],
+    "local_u": [
+      [
+        0,
+        "9568EFEDFEC65794F47712B6191E0158AEF7E06E6A23B7C4B5FF8E9D4FF2C"
+      ]
+    ],
+    "local_v": [
+      [
+        0,
+        "9568EFEDFEC65794F47712B6191E0158AEF7E06E6A23B7C4B5FF8E9D4FF2C"
+      ]
+    ],
+    "nhalo": [
+      [
+        0,
+        "175B3699FE532BC8BC1D46BB499BCA8F1F947F637ED89E357FDC7D2BDC7F1CA"
+      ]
+    ],
+    "north": [
+      [
+        0,
+        "40B7B493B1BC2D2DFD5149B67C2B19A0A27C1CD4428A92D9AC44FE38AC81189F"
+      ]
+    ],
+    "run_steps": [
+      [
+        0,
+        "049501C314EED1A4F0399DFE4672B2DF051511CCFAE363A14CB77B1E9B49"
+      ]
+    ],
+    "sigma": [
+      [
+        0,
+        "6F2EFB134185B5D77A57614FF5BAA38F58576EA7AA4327FEF3155B90DC785F"
+      ]
+    ],
+    "south": [
+      [
+        0,
+        "40B7B493B1BC2D2DFD5149B67C2B19A0A27C1CD4428A92D9AC44FE38AC81189F"
+      ]
+    ],
+    "u_new": [
+      [
+        0,
+        "A4D3F077C74B47416244C8A68A52B155DEEC5361EE6591B4C7D86CFD4F58507"
+      ],
+      [
+        392,
+        "D5C67D31C8177AE842B973A1DFCC3EC197614D8DD5A378195F5F6E2E5B682D"
+      ]
+    ],
+    "u_new_out_boundaries": [
+      [
+        0,
+        "D5C67D31C8177AE842B973A1DFCC3EC197614D8DD5A378195F5F6E2E5B682D"
+      ]
+    ],
+    "u_new_out_interior": [
+      [
+        0,
+        "E7B7D7C8FB23E5AE265C59CF3049896A1CEB31A45C8C33635DCBB5AD970D3"
+      ]
+    ],
+    "v_new": [
+      [
+        0,
+        "BA999CA76237704E4B18FAF45D6A72633FD7BEADB1A9E8F3D189F6F403B6D"
+      ],
+      [
+        392,
+        "E6221CFB879D3934819DC39C7D186E8B576BA3D5F2E96FD55906251AD143B7F"
+      ]
+    ],
+    "v_new_out_boundaries": [
+      [
+        0,
+        "E6221CFB879D3934819DC39C7D186E8B576BA3D5F2E96FD55906251AD143B7F"
+      ]
+    ],
+    "v_new_out_interior": [
+      [
+        0,
+        "6E7CD841D120C5DFA906ED5E782D7AF855AB0D69B1EB505089B427EBC210FE"
+      ]
+    ],
+    "west": [
+      [
+        0,
+        "40B7B493B1BC2D2DFD5149B67C2B19A0A27C1CD4428A92D9AC44FE38AC81189F"
+      ]
+    ],
+    "xme": [
+      [
+        0,
+        "D97F51F9B4DD3E4D27B938A5462FD24D7CF35C8BADF4ECB39C9895D13B8E7D"
+      ]
+    ],
+    "xmid": [
+      [
+        0,
+        "DA50819D2194EC15E9C0589114DC0BBDAE858804438D39FD0C9D0E5F9684073"
+      ]
+    ],
+    "xms": [
+      [
+        0,
+        "175B3699FE532BC8BC1D46BB499BCA8F1F947F637ED89E357FDC7D2BDC7F1CA"
+      ]
+    ],
+    "xpe": [
+      [
+        0,
+        "D97F51F9B4DD3E4D27B938A5462FD24D7CF35C8BADF4ECB39C9895D13B8E7D"
+      ]
+    ],
+    "xpe_local": [
+      [
+        0,
+        "D97F51F9B4DD3E4D27B938A5462FD24D7CF35C8BADF4ECB39C9895D13B8E7D"
+      ]
+    ],
+    "xps": [
+      [
+        0,
+        "175B3699FE532BC8BC1D46BB499BCA8F1F947F637ED89E357FDC7D2BDC7F1CA"
+      ]
+    ],
+    "xps_local": [
+      [
+        0,
+        "175B3699FE532BC8BC1D46BB499BCA8F1F947F637ED89E357FDC7D2BDC7F1CA"
+      ]
+    ],
+    "xte": [
+      [
+        0,
+        "4123E2375241CDB6C7D6AB671264467C7A5D0F23083BE28CEA5EBDE643283F"
+      ]
+    ],
+    "xts": [
+      [
+        0,
+        "A4FCDCA5CA41C24EEC9522D86BE59FA6B1A86CC32DC3E21BC66ADF8F135777B"
+      ]
+    ],
+    "yme": [
+      [
+        0,
+        "D97F51F9B4DD3E4D27B938A5462FD24D7CF35C8BADF4ECB39C9895D13B8E7D"
+      ]
+    ],
+    "ymid": [
+      [
+        0,
+        "DA50819D2194EC15E9C0589114DC0BBDAE858804438D39FD0C9D0E5F9684073"
+      ]
+    ],
+    "yms": [
+      [
+        0,
+        "175B3699FE532BC8BC1D46BB499BCA8F1F947F637ED89E357FDC7D2BDC7F1CA"
+      ]
+    ],
+    "ype": [
+      [
+        0,
+        "D97F51F9B4DD3E4D27B938A5462FD24D7CF35C8BADF4ECB39C9895D13B8E7D"
+      ]
+    ],
+    "ype_local": [
+      [
+        0,
+        "D97F51F9B4DD3E4D27B938A5462FD24D7CF35C8BADF4ECB39C9895D13B8E7D"
+      ]
+    ],
+    "yps": [
+      [
+        0,
+        "175B3699FE532BC8BC1D46BB499BCA8F1F947F637ED89E357FDC7D2BDC7F1CA"
+      ]
+    ],
+    "yps_local": [
+      [
+        0,
+        "175B3699FE532BC8BC1D46BB499BCA8F1F947F637ED89E357FDC7D2BDC7F1CA"
+      ]
+    ],
+    "yte": [
+      [
+        0,
+        "4123E2375241CDB6C7D6AB671264467C7A5D0F23083BE28CEA5EBDE643283F"
+      ]
+    ],
+    "yts": [
+      [
+        0,
+        "A4FCDCA5CA41C24EEC9522D86BE59FA6B1A86CC32DC3E21BC66ADF8F135777B"
+      ]
+    ]
+  },
+  "hash_algorithm": "SHA256",
+  "serialbox_version": 261
+}

@@ -53,11 +53,11 @@ program Tsunami
   ! Start up MPI
   call MPI_Init(ierr)
 
-  ! Initialize Serialbox
-  !$ser init directory='./serialbox_data' prefix='shallow_water'
-
   ! Get our rank
   call MPI_Comm_rank(MPI_COMM_WORLD, myrank, ierr)
+  
+  ! Initialize Serialbox
+  !$ser init directory='./serialbox_data' prefix='shallow_water'
 
   ! Read namelist from stdin
   if (myrank == 0) then
@@ -166,12 +166,8 @@ program Tsunami
   ! Run the model
   do t = 0, run_steps, output_interval_steps
 
-
-
     ! Advance the model to next output interval
     call model%adv_nsteps(state, min(output_interval_steps, run_steps - t))
-
-
 
     ! Write out model state if needed
     if (output_interval_steps <= run_steps) then
