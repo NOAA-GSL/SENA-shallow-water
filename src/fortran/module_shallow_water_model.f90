@@ -167,14 +167,11 @@ contains
     integer                   :: xts, xte, yts, yte
     integer                   :: xms, xme, yms, yme
     integer                   :: north, south, west, east
-    real(r8kind)              :: dx, dy, maxdt, local_dt
+    real(r8kind)              :: dx, dy, maxdt, dt
     real(r8kind), allocatable :: u_new(:,:)
     real(r8kind), allocatable :: v_new(:,:)
     real(r8kind), allocatable :: h_new(:,:)
     real(r8kind), allocatable :: local_b(:,:)
-    real(r8kind), allocatable :: local_u(:,:)
-    real(r8kind), allocatable :: local_v(:,:)
-    real(r8kind), allocatable :: local_h(:,:)
 
     ! Get grid spacing
     dx = this%geometry%get_dx()
@@ -212,39 +209,34 @@ contains
     west = this%geometry%get_west()
     east = this%geometry%get_east()
 
-
     ! Allocate space for new state
     allocate(u_new(xps:xpe, yps:ype))
     allocate(v_new(xps:xpe, yps:ype))
     allocate(h_new(xps:xpe, yps:ype))
 
-    ! Make local copies of u,v,h dt & b for Serialization Tests
-    local_u = state%u
-    local_v = state%v
-    local_h = state%h
-    local_dt = this%dt 
+    ! Make a local copy of b so that SerialBox can serialize it
     allocate(local_b, SOURCE=this%b)
 
+    ! Make a local copy of dt so that SerialBox can serialize it
+    dt = this%dt
 
     ! Move the model state n steps into the future
     do n=1,nsteps
 
+      !$ser verbatim if (n == 1) then
+      !$ser savepoint update-IN
+      !$ser data xps=xps xpe=xpe yps=yps ype=ype
+      !$ser data xms=xms xme=xme yms=yms yme=yme
+      !$ser data xts=xts xte=xte yts=yts yte=yte
+      !$ser data north=north south=south west=west east=east
+      !$ser data dx=dx dy=dy dt=dt
+      !$ser data u=state%u v=state%v h=state%h b=local_b
+      !$ser data u_new=u_new v_new=v_new h_new=h_new
+      !$ser data nhalo=xts-xps dtdx=dt/dx dtdy=dt/dy
+      !$ser verbatim endif
+
       ! Exchange halos
       call state%exchange_halo()
-
-      !*** Serialbox calls for initialization***
-      ! $ser init directory='./serialbox_data' prefix='update_model' unique_id=.true.
-      !$ser mode write
-      !$ser on
-
-      !*** Serialbox calls to create a savepoint to save initial starting data***
-      !$ser verbatim if (n == 1) then
-      !$ser savepoint update_boundaries-IN
-      !$ser data xps=xps xpe=xpe yps=yps ype=ype xms=xms xme=xme yms=yms yme=yme
-      !$ser data north=north south=south west=west east=east 
-      !$ser data local_u=local_u local_v=local_v local_h=local_h
-      !$ser data u_new=u_new v_new=v_new h_new=h_new nhalo=xts-xps
-      !$ser verbatim endif
 
       ! Update the domain boundaries
       call this%update_boundaries_model(                          &
@@ -256,21 +248,10 @@ contains
                                         state%h,                  &
                                         u_new, v_new, h_new       &
                                        )
-
+      
+      !$ser verbatim if (n == 1 .or. n == nsteps) then
       !$ser savepoint update_boundaries-OUT
-      !$ser data u_new_out_boundaries=u_new v_new_out_boundaries=v_new h_new_out_boundaries=h_new
-     
-      !$ser verbatim if (n == 1) then
-      !$ser savepoint update_interior-IN
-      !$ser data xps=xps xpe=xpe yps=yps ype=ype xts=xts xte=xte yts=yts yte=yte 
-      !$ser data xms=xms xme=xme yms=yms yme=yme
-      !$ser data local_u=local_u local_v=local_v local_h=local_h
-      !$ser data local_b=local_b dx=dx dy=dy local_dt=local_dt
-      !$ser data u_new=u_new v_new=v_new h_new=h_new 
-
-      ! Serialize indexing variables for ease of creating GT4Py storages
-      ! nhalo can be calculated by the starting index of the interior points of this grid patch (xts) minus starting index of for this grid patch (xps)
-      !$ser data nhalo=xts-xps  dtdx=local_dt/dx dtdy=local_dt/dy 
+      !$ser data u_new=u_new v_new=v_new h_new=h_new
       !$ser verbatim endif
 
       ! Update the domain interior
@@ -278,18 +259,18 @@ contains
                                       xps, xpe, yps, ype,  &
                                       xts, xte, yts, yte,  &
                                       xms, xme, yms, yme,  &
-                                      local_u,             &
-                                      local_v,             &
-                                      local_h,             &
-                                      local_b,             &
+                                      state%u,             &
+                                      state%v,             &
+                                      state%h,             &
+                                      this%b,              &
                                       u_new, v_new, h_new, &
-                                      dx, dy, local_dt     &
+                                      dx, dy, this%dt      &
                                      )
 
-
-      !$ser savepoint update_interior-OUT
-      !$ser data u_new_out_interior=u_new v_new_out_interior=v_new h_new_out_interior=h_new
-      !$ser cleanup 
+      !$ser verbatim if (n == 1 .or. n == nsteps) then
+      !$ser savepoint update-OUT
+      !$ser data u_new=u_new v_new=v_new h_new=h_new
+      !$ser verbatim endif
 
       ! Update state with new state
       do j = yps, ype
@@ -303,7 +284,12 @@ contains
       ! Update the model clock and step counter
       call state%advance_clock(this%dt)
 
+
     end do
+
+    !$ser savepoint output_data
+    !$ser data u=state%u v=state%v h=state%h
+
 
   end subroutine adv_nsteps_model
 
@@ -383,9 +369,6 @@ contains
         h_new(i, yps) =  h(i, yps + 1);
         u_new(i, yps) =  u(i, yps + 1);
         v_new(i, yps) = -v(i, yps + 1);
-        ! h_new(i, yps) = 1.;
-        ! u_new(i, yps) = 1.;
-        ! v_new(i, yps) = 1.;
       end do
     end if
 
@@ -395,9 +378,6 @@ contains
         h_new(i, ype)   =  h(i, ype - 1);
         u_new(i, ype)   =  u(i, ype - 1);
         v_new(i, ype)   = -v(i, ype - 1);
-        ! h_new(i, ype)   = 1.;
-        ! u_new(i, ype)   = 1.;
-        ! v_new(i, ype)   = 1.;
       end do
     end if
 
@@ -407,9 +387,6 @@ contains
         h_new(xps, j)   =  h(xps + 1, j);
         u_new(xps, j)   = -u(xps + 1, j);
         v_new(xps, j)   =  v(xps + 1, j);
-        ! h_new(xps, j)   = 1.;
-        ! u_new(xps, j)   = 1.;
-        ! v_new(xps, j)   = 1.;
       end do
     end if
 
@@ -419,9 +396,6 @@ contains
         h_new(xpe, j) =  h(xpe - 1, j);
         u_new(xpe, j) = -u(xpe - 1, j);
         v_new(xpe, j) =  v(xpe - 1, j);
-        ! h_new(xpe, j) = 1.;
-        ! u_new(xpe, j) = 1.;
-        ! v_new(xpe, j) = 1.;
       end do
     end if
 

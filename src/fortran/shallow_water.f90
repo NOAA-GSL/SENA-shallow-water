@@ -57,7 +57,7 @@ program Tsunami
   call MPI_Comm_rank(MPI_COMM_WORLD, myrank, ierr)
   
   ! Initialize Serialbox
-  !$ser init directory='./serialbox_data' prefix='shallow_water'
+  !$ser init directory='./serialbox_data' prefix='shallow_water' unique_id=.true.
 
   ! Read namelist from stdin
   if (myrank == 0) then
@@ -131,13 +131,6 @@ program Tsunami
     xps_local = geometry%get_xps()
     xpe_local = geometry%get_xpe()
 
-    !$ser mode write
-    !$ser on
-    !$ser savepoint tsunami_pulse-IN
-    !$ser data dx=dx dy=dy xmid=xmid ymid=ymid sigma=sigma 
-    !$ser data yps_local=yps_local ype_local=ype_local xps_local=xps_local xpe_local=xpe_local
-    !$ser data h0=h0 h=h run_steps=run_steps
-
     do j = geometry%get_yps(), geometry%get_ype()
       do i = geometry%get_xps(), geometry%get_xpe()
         dsqr = (dble(i - 1) * dx - xmid)**2 + (dble(j - 1) * dy - ymid)**2
@@ -146,13 +139,11 @@ program Tsunami
     end do
     state = shallow_water_state_type(geometry, h=h)
     
-    !$ser savepoint tsunami_pulse-OUT
-    !$ser data h=h
-
   end if
 
   ! Create a shallow water model configuration from namelist
   model_config = shallow_water_model_config_type(dt, u0, v0, b0, h0)
+
 
   ! Initialize shallow water model object
   model = shallow_water_model_type(model_config, geometry)
@@ -162,6 +153,10 @@ program Tsunami
 
   ! Write out state if needed
   if (output_interval_steps <= run_steps) call state%write(filename)
+  
+  ! Capture nsteps of the model
+  !$ser savepoint tsunami_pulse-IN
+  !$ser data run_steps=run_steps
 
   ! Run the model
   do t = 0, run_steps, output_interval_steps

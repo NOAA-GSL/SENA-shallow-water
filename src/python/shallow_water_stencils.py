@@ -92,12 +92,12 @@ def update_interior_model(
 
 serializer = ser.Serializer(ser.OpenModeKind.Read, data_path, 'shallow_water')
 
-sp_IN = serializer.get_savepoint('update_interior-IN')
+sp_IN = serializer.get_savepoint('update-IN')
 
-local_u = serializer.read('local_u', sp_IN[0]) 
-local_v = serializer.read('local_v', sp_IN[0]) 
-local_h = serializer.read('local_h', sp_IN[0])
-local_b = serializer.read('local_b', sp_IN[0]) 
+u = serializer.read('u', sp_IN[0]) 
+v = serializer.read('v', sp_IN[0]) 
+h = serializer.read('h', sp_IN[0])
+b = serializer.read('b', sp_IN[0]) 
 
 u_new = serializer.read('u_new', sp_IN[0])
 v_new = serializer.read('v_new', sp_IN[0])
@@ -113,16 +113,14 @@ xte  = serializer.read('xte', sp_IN[0])[0]
 yts  = serializer.read('yts', sp_IN[0])[0]
 yte  = serializer.read('yte', sp_IN[0])[0]
 
-# dtdx and dtdy are computed during serialization (!$ser data dtdx=local_dt/dx dtdy=local_dt/dy) 
+# dtdx and dtdy are computed during serialization (!$ser data dtdx=dt/dx dtdy=dt/dy) 
 dtdx = serializer.read('dtdx', sp_IN[0])[0]
 dtdy = serializer.read('dtdy', sp_IN[0])[0]
 
-sp_BOUND = serializer.get_savepoint('update_boundaries-IN')
-
-north = serializer.read('north', sp_BOUND[0])[0]
-south = serializer.read('south', sp_BOUND[0])[0]
-west  = serializer.read('west',  sp_BOUND[0])[0]
-east  = serializer.read('east',  sp_BOUND[0])[0]
+north = serializer.read('north', sp_IN[0])[0]
+south = serializer.read('south', sp_IN[0])[0]
+west  = serializer.read('west',  sp_IN[0])[0]
+east  = serializer.read('east',  sp_IN[0])[0]
 
 # Set up nhalo, origin, and domain (nhalo is xts - xps - start of interior points minus start of grid patch)
 nhalo=xts-xps
@@ -133,10 +131,10 @@ domain=(nx, ny,1)
 
 
 # Allocate storages 
-u_gt = gt_storage.from_array(local_u, backend=backend, dtype=np.float64,default_origin=(1,1))
-v_gt = gt_storage.from_array(local_v, backend=backend, dtype=np.float64,default_origin=(1,1))
-h_gt = gt_storage.from_array(local_h, backend=backend, dtype=np.float64,default_origin=(1,1))
-b_gt = gt_storage.from_array(local_b, backend=backend, dtype=np.float64,default_origin=(1,1))
+u_gt = gt_storage.from_array(u, backend=backend, dtype=np.float64,default_origin=(1,1))
+v_gt = gt_storage.from_array(v, backend=backend, dtype=np.float64,default_origin=(1,1))
+h_gt = gt_storage.from_array(h, backend=backend, dtype=np.float64,default_origin=(1,1))
+b_gt = gt_storage.from_array(b, backend=backend, dtype=np.float64,default_origin=(1,1))
 
 u_new_gt = gt_storage.from_array(u_new, backend=backend, dtype=np.float64,default_origin=(1,1))
 v_new_gt = gt_storage.from_array(v_new, backend=backend, dtype=np.float64,default_origin=(1,1))
@@ -176,11 +174,11 @@ for step in range(nsteps):
 
 
 # Retrieve savepoint output data 
-sp_OUT = serializer.get_savepoint('update_interior-OUT')
+sp_OUT = serializer.get_savepoint('update-OUT')
 
-u_new_out = serializer.read('u_new_out_interior', sp_OUT[0]) 
-v_new_out = serializer.read('v_new_out_interior', sp_OUT[0]) 
-h_new_out = serializer.read('h_new_out_interior', sp_OUT[0])
+u_new_out = serializer.read('u_new', sp_OUT[0]) 
+v_new_out = serializer.read('v_new', sp_OUT[0]) 
+h_new_out = serializer.read('h_new', sp_OUT[0])
 
 # Compare answers (after calling both stencils)
 # Comparison is only done at the end of advancing the model through the specified timesteps
@@ -191,4 +189,4 @@ try:
 except AssertionError as msg:
     print(msg)
     
-print("Finished running comparison tests!")
+print("Finished running comparison tests, all PASSED!")
