@@ -90,6 +90,20 @@ def update_interior_model(
                         - 0.5 * dtdx * (h[0,0] - b[0,0]) * (u[1,0] - u[-1,0])                \
                         - 0.5 * dtdy * (h[0,0] - b[0,0]) * (v[0,1] - v[0,-1])
 
+# Define update state stencil 
+@gtscript.stencil(backend=backend)
+def update_state(u     :  FloatFieldIJ,
+                 v     :  FloatFieldIJ,
+                 h     :  FloatFieldIJ,
+                 u_new :  FloatFieldIJ,
+                 v_new :  FloatFieldIJ,
+                 h_new :  FloatFieldIJ):
+    with computation(FORWARD), interval(...):     
+        u = u_new
+        v = v_new
+        h = h_new
+
+
 serializer = ser.Serializer(ser.OpenModeKind.Read, data_path, 'shallow_water')
 
 sp_IN = serializer.get_savepoint('update-IN')
@@ -144,7 +158,7 @@ h_new_gt = gt_storage.from_array(h_new, backend=backend, dtype=np.float64,defaul
 sp_tsunami_pulse_IN = serializer.get_savepoint('tsunami_pulse-IN')
 nsteps = serializer.read('run_steps', sp_tsunami_pulse_IN[0])[0]
 
-# Move model forward and compute
+# Move model forward, compute, & update state
 for step in range(nsteps):
     update_boundaries(south=south,
                       north=north,
@@ -172,20 +186,29 @@ for step in range(nsteps):
                           domain=domain,
                           origin=origin)
 
+    update_state(u=u_gt,
+                 v=v_gt,
+                 h=h_gt,
+                 u_new=u_new_gt,
+                 v_new=v_new_gt,
+                 h_new=h_new_gt,
+                 origin=(0,0),
+                 domain=(nx+2, ny+2, 1))
+
 
 # Retrieve savepoint output data 
-sp_OUT = serializer.get_savepoint('update-OUT')
+sp_OUT = serializer.get_savepoint('output_data')
 
-u_new_out = serializer.read('u_new', sp_OUT[0]) 
-v_new_out = serializer.read('v_new', sp_OUT[0]) 
-h_new_out = serializer.read('h_new', sp_OUT[0])
+u_out = serializer.read('u', sp_OUT[0]) 
+v_out = serializer.read('v', sp_OUT[0]) 
+h_out = serializer.read('h', sp_OUT[0])
 
-# Compare answers (after calling both stencils)
+# Compare answers (after calling stencils)
 # Comparison is only done at the end of advancing the model through the specified timesteps
 try:
-    assert np.array_equal(u_new_out, u_new_gt), "** u_new does not match!"
-    assert np.array_equal(v_new_out, v_new_gt), "** v_new does not match!"
-    assert np.array_equal(h_new_out, h_new_gt), "** h_new does not match!"
+    assert np.array_equal(u_out, u_gt), "** u_new does not match!"
+    assert np.array_equal(v_out, v_gt), "** v_new does not match!"
+    assert np.array_equal(h_out, h_gt), "** h_new does not match!"
 except AssertionError as msg:
     print(msg)
     
