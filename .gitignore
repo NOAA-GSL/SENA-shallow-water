@@ -1,3 +1,11 @@
 # Ignore emacs backup files
 *~
 #*
+
+# Ignore Direnv and .env files
+*.envrc
+*.direnv
+
+# Ignore executable and build directories
+exe/
+build/
