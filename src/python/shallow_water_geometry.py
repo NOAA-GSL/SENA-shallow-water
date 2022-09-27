@@ -112,99 +112,99 @@ class shallow_water_geometry:
         return self.mpi_comm
 
     def get_rank(self):
-        return self.rank
+        return np.int32(self.rank)
     
     def get_nranks(self):
-        return self.nranks
+        return np.int32(self.nranks)
 
     def get_nx(self):
-        return self.nx
+        return np.int32(self.nx)
     
     def get_ny(self):
-        return self.ny
+        return np.int32(self.ny)
     
     def get_xmax(self):
-        return self.xmax
+        return np.float64(self.xmax)
     
     def get_ymax(self):
-        return self.ymax
+        return np.float64(self.ymax)
 
     def get_dx(self):
-        return self.dx
+        return np.float64(self.dx)
     
     def get_dy(self):
-        return self.dy
+        return np.float64(self.dy)
 
     def get_north(self):
-        return self.north
+        return np.int32(self.north)
 
     def get_south(self):
-        return self.south
+        return np.int32(self.south)
 
     def get_west(self):
-        return self.west
+        return np.int32(self.west)
 
     def get_east(self):
-        return self.east
+        return np.int32(self.east)
 
     def get_npx(self):
-        return self.npx
+        return np.int32(self.npx)
     
     def get_npy(self):
-        return self.npy
+        return np.int32(self.npy)
     
     def get_xps(self):
-        return self.xps
+        return np.int32(self.xps)
 
     def get_xpe(self):
-        return self.xpe
+        return np.int32(self.xpe)
     
     def get_yps(self):
-        return self.yps
+        return np.int32(self.yps)
 
     def get_ype(self):
-        return self.ype
+        return np.int32(self.ype)
 
     def get_xts(self):
-        return self.xts
+        return np.int32(self.xts)
 
     def get_xte(self):
-        return self.xte
+        return np.int32(self.xte)
     
     def get_yts(self):
-        return self.yts
+        return np.int32(self.yts)
     
     def get_yte(self):
-        return self.yte
+        return np.int32(self.yte)
     
     def get_xms(self):
-        return self.xms
+        return np.int32(self.xms)
     
     def get_xme(self):
-        return self.xme    
+        return np.int32(self.xme)
     
     def get_yms(self):
-        return self.yms
+        return np.int32(self.yms)
     
     def get_yme(self):
-        return self.yme
+        return np.int32(self.yme)
 
 
-comm = MPI.COMM_WORLD
+# comm = MPI.COMM_WORLD
 
-geom_config = shallow_water_geometry_config("../../parm/shallow_water.yml")
+# geom_config = shallow_water_geometry_config("../../parm/shallow_water.yml")
 
-print( geom_config.__dict__)
+# print( geom_config.__dict__)
 
-geom = shallow_water_geometry(geometry=geom_config, mpi_comm=comm)
+# geom = shallow_water_geometry(geometry=geom_config, mpi_comm=comm)
 
-print(geom.__dict__)
+# print(geom.__dict__)
 
-print(geom.get_communicator())
+# print(geom.get_communicator())
 
-print(getattr(geom, "east"))
+# print("getattr method for 'east', ", getattr(geom, "east"))
 
-print(type(geom))
+# print(type(geom))
 
 
 
