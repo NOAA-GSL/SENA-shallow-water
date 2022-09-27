@@ -9,3 +9,6 @@
 # Ignore executable and build directories
 exe/
 build/
+
+# Ignore Pycache
+__pycache__/
