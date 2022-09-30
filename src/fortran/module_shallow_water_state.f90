@@ -145,6 +145,7 @@ contains
     end if
 
     ! Calculate the maximum wave speed from h
+    ! MPI_Allreduce(sendbuf, recvbuf, count, datatype, op, comm, ierror)
     call MPI_Allreduce(maxval(this%h(xps:xpe, yps:ype)), max_h, 1, MPI_DOUBLE_PRECISION, MPI_MAX, this%geometry%get_communicator(), ierr)
     this%max_wavespeed = sqrt(g * max_h)
 
@@ -225,6 +226,7 @@ contains
     east = this%geometry%get_east()
 
     ! Post the non-blocking receive half of the exhange first to reduce overhead
+    ! MPI_IRECV(BUF, COUNT, DATATYPE, SOURCE, TAG, COMM, REQUEST, IERROR)
     nrequests = 0
     if (north /= -1) then
        nrequests = nrequests + 1
@@ -274,6 +276,7 @@ contains
     end if
 
     ! Now post the non-blocking send half of the exchange
+    ! MPI_Isend(buf, count, datatype, dest, tag, comm, request, ierror)
     if (north /= -1) then
        nrequests = nrequests + 1
        call MPI_ISend(nsendbuffer, 3 * npx, MPI_DOUBLE_PRECISION, north, ntag, communicator, irequest(nrequests), ierr)
@@ -384,6 +387,7 @@ contains
     end if
 
     ! Gather the local indices for each rank
+    ! MPI_Gather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, ierror)
     call MPI_Gather(xms_local, 1, MPI_INT, xms, 1, MPI_INT, 0, communicator, ierr)
     call MPI_Gather(xme_local, 1, MPI_INT, xme, 1, MPI_INT, 0, communicator, ierr)
     call MPI_Gather(yms_local, 1, MPI_INT, yms, 1, MPI_INT, 0, communicator, ierr)
@@ -421,6 +425,7 @@ contains
     end if
 
     ! Fill the send buffer and scatter u, v, h
+    ! Scatterv(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm, ierror)
     if (myrank == 0) then
       do n = 1, nranks
         send_buffer(send_offsets(n) + 1:send_offsets(n) + nsend_elements(n)) = reshape(u_full(xms(n):xme(n), yms(n):yme(n)), (/nsend_elements(n)/))
@@ -535,6 +540,7 @@ contains
     end if
 
     ! Gather u, v, and h from all ranks and unpack into full size arrays
+    ! MPI_Gatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm, ierror)
     call MPI_Gatherv(this%u(xps_local:xpe_local, yps_local:ype_local), nelements_local, MPI_DOUBLE_PRECISION, recv_buffer, nrecv_elements, recv_offsets, MPI_DOUBLE_PRECISION, 0, communicator, ierr)
     if (myrank ==0) then
       do n=1, nranks

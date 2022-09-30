@@ -5,13 +5,20 @@ from shallow_water_geometry_config import shallow_water_geometry_config
 
 
 class shallow_water_geometry:
-    """Class for the geometry, extending the shallow_water_geometry_config class.
-
+    """
+    Class for the geometry, extending the shallow_water_geometry_config class.
     """
 
-    def __init__(self, geometry: shallow_water_geometry_config, mpi_comm: MPI.COMM_WORLD):
+    def __init__(self, geometry: shallow_water_geometry_config, mpi_comm: MPI.Comm):
         """
-            Initialize this class based off of the shallow_water_geometry_config class. 
+        Initialize this class based off of the shallow_water_geometry_config class.
+
+            Arguments:
+                geometry:  class,   Geometry consisting of nx, ny, xmax, ymax
+                mpi_comm:  class,   MPI Communication
+
+            Return:
+                An initialized geometry class based off a geometry configuration.
         """
 
         self.nx   = geometry.nx   
@@ -188,23 +195,4 @@ class shallow_water_geometry:
     
     def get_yme(self):
         return np.int32(self.yme)
-
-
-# comm = MPI.COMM_WORLD
-
-# geom_config = shallow_water_geometry_config("../../parm/shallow_water.yml")
-
-# print( geom_config.__dict__)
-
-# geom = shallow_water_geometry(geometry=geom_config, mpi_comm=comm)
-
-# print(geom.__dict__)
-
-# print(geom.get_communicator())
-
-# print("getattr method for 'east', ", getattr(geom, "east"))
-
-# print(type(geom))
-
-
 
