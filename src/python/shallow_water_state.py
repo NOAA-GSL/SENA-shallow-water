@@ -184,7 +184,7 @@ class ShallowWaterState:
         # Get the MPI rank of this process from the geometry
         _myrank = self.geometry.rank
 
-        # Get the local indices (excluding the halo) from the geometry
+        # Get the local indices (including the halo) from the geometry
         _xms_local = np.full(1, self.geometry.xms, dtype=int)
         _xme_local = np.full(1, self.geometry.xme, dtype=int)
         _yms_local = np.full(1, self.geometry.yms, dtype=int)
@@ -249,6 +249,86 @@ class ShallowWaterState:
         _communicator.Scatterv([_send_buffer, _nsend_elements, _send_offsets, MPI.DOUBLE], self.h)
 
 
+    def gather(self, u_full, v_full, h_full):
+
+        # Get the MPI communicator from the geometry
+        _communicator = self.geometry.communicator
+
+        # Get the number of MPI ranks from the geometry
+        _nranks = self.geometry.nranks
+
+        # Get the MPI rank of this process from the geometry
+        _myrank = self.geometry.rank
+
+        # Get the local indices (excluding the halo) from the geometry
+        _xps_local = self.geometry.xps
+        _xpe_local = self.geometry.xpe
+        _yps_local = self.geometry.yps
+        _ype_local = self.geometry.ype
+
+        # Get the local indices (including the halo) from the geometry
+        _xms_local = self.geometry.xms
+        _xme_local = self.geometry.xme
+        _yms_local = self.geometry.yms
+        _yme_local = self.geometry.yme
+
+        # Calculate the local number of elements
+        _nelements_local = (_xpe_local - _xps_local + 1) * (_ype_local - _yps_local + 1)
+
+        # Allocate space for the indices of each rank
+        if (_myrank == 0):
+            _xps = np.empty((_nranks), dtype=int)
+            _xpe = np.empty((_nranks), dtype=int)
+            _yps = np.empty((_nranks), dtype=int)
+            _ype = np.empty((_nranks), dtype=int)
+        else:
+            _xps = np.empty((1), dtype=int)
+            _xpe = np.empty((1), dtype=int)
+            _yps = np.empty((1), dtype=int)
+            _ype = np.empty((1), dtype=int)
+
+        # Gather the local indices for each rank
+        _communicator.Gather(np.asarray(_xps_local), _xps)
+        _communicator.Gather(np.asarray(_xpe_local), _xpe)
+        _communicator.Gather(np.asarray(_yps_local), _yps)
+        _communicator.Gather(np.asarray(_ype_local), _ype)
+
+        # Calculate the number of elements that will be receieved from each rank
+        if (_myrank == 0):
+            _nrecv_elements = np.empty((_nranks), dtype=int)
+            for n in range(_nranks):
+                _nrecv_elements[n] = (_xpe[n] - _xps[n] + 1) * (_ype[n] - _yps[n] + 1)
+        else:
+            _nrecv_elements = np.empty((1))
+
+        # Calculate the receive buffer offsets for each rank
+        if (_myrank == 0):
+            _recv_offsets =  np.empty((_nranks), dtype=int)
+            _recv_offsets[0] = 0
+            for n in range(1,_nranks):
+                 _recv_offsets[n] = _recv_offsets[n-1] + _nrecv_elements[n-1]
+        else:
+            _recv_offsets = np.empty((1))
+
+        # Allocate a receive buffer for gathering u, v, and h
+        if (_myrank == 0):
+            _recv_buffer = np.empty((_nrecv_elements.sum()))
+        else:
+            _recv_buffer = np.empty((1))
+
+        # Gather u, v, and h from all ranks and unpack into full size arrays
+        _communicator.Gatherv(np.ascontiguousarray(self.u[_xps_local-_xms_local:_xpe_local-_xms_local+1, _yps_local-_yms_local:_ype_local-_yms_local+1]), [_recv_buffer, _nrecv_elements, _recv_offsets, MPI.DOUBLE])
+        if (_myrank == 0):
+            for n in range(_nranks):
+                u_full[_xps[n]-1:_xpe[n], _yps[n]-1:_ype[n]] = np.reshape(_recv_buffer[_recv_offsets[n]:_recv_offsets[n]+_nrecv_elements[n]], (_xpe[n] - _xps[n] + 1, _ype[n] - _yps[n] + 1))
+        _communicator.Gatherv(np.ascontiguousarray(self.v[_xps_local-_xms_local:_xpe_local-_xms_local+1, _yps_local-_yms_local:_ype_local-_yms_local+1]), [_recv_buffer, _nrecv_elements, _recv_offsets, MPI.DOUBLE])
+        if (_myrank == 0):
+            for n in range(_nranks):
+                v_full[_xps[n]-1:_xpe[n], _yps[n]-1:_ype[n]] = np.reshape(_recv_buffer[_recv_offsets[n]:_recv_offsets[n]+_nrecv_elements[n]], (_xpe[n] - _xps[n] + 1, _ype[n] - _yps[n] + 1))
+        _communicator.Gatherv(np.ascontiguousarray(self.h[_xps_local-_xms_local:_xpe_local-_xms_local+1, _yps_local-_yms_local:_ype_local-_yms_local+1]), [_recv_buffer, _nrecv_elements, _recv_offsets, MPI.DOUBLE])
+        if (_myrank == 0):
+            for n in range(_nranks):
+                h_full[_xps[n]-1:_xpe[n], _yps[n]-1:_ype[n]] = np.reshape(_recv_buffer[_recv_offsets[n]:_recv_offsets[n]+_nrecv_elements[n]], (_xpe[n] - _xps[n] + 1, _ype[n] - _yps[n] + 1))
 
 
 comm = MPI.COMM_WORLD
@@ -260,3 +340,4 @@ u_full = np.zeros((g.nx, g.ny))
 v_full = np.zeros((g.nx, g.ny))
 h_full = np.zeros((g.nx, g.ny))
 s.scatter(u_full, v_full, h_full)
+s.gather(u_full, v_full, h_full)
