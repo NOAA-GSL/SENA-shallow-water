@@ -39,7 +39,7 @@ class ShallowWaterGeometry:
             self.nxprocs = self.nranks // _factor
         self.nyprocs = self.nranks // self.nxprocs
 
-        # Compute the processor coordinate for self rank
+        # Compute the processor coordinate for this rank
         self.xproc = self.rank % self.nxprocs
         self.yproc = self.rank // self.nxprocs
 
@@ -61,7 +61,7 @@ class ShallowWaterGeometry:
         else:
             self.east = self.yproc * self.nxprocs + self.xproc + 1
   
-        # Compute the size of the x and y extents for self patch of the domain
+        # Compute the size of the x and y extents for this patch of the domain
         self.npx = self.nx // self.nxprocs
         if (self.xproc >= (self.nxprocs - (self.nx % self.nxprocs))):
             self.npx = self.npx + 1
@@ -69,13 +69,13 @@ class ShallowWaterGeometry:
         if (self.yproc >= (self.nyprocs - (self.ny % self.nyprocs))):
             self.npy = self.npy + 1
   
-        # Compute the start/end indices for self patch of the domain
+        # Compute the start/end indices for this patch of the domain
         self.xps = self.nx // self.nxprocs * self.xproc + 1 + max(0, self.xproc - (self.nxprocs - (self.nx % self.nxprocs)))
         self.xpe = self.xps + self.npx - 1
         self.yps = self.ny // self.nyprocs * self.yproc + 1 + max(0, self.yproc - (self.nyprocs - (self.ny % self.nyprocs)))
         self.ype = self.yps + self.npy - 1
   
-        # Compute the start/end indices for the interior points and memory allocated for self patch
+        # Compute the start/end indices for the interior points and memory allocated for this patch
         if (self.north == -1):
             self.yte = self.ype - 1
             self.yme = self.ype

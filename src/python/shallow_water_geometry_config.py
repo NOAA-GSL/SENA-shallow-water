@@ -33,7 +33,6 @@ class ShallowWaterGeometryConfig:
     @classmethod
     def from_YAML_file_object(cls, fileObject):
         import yaml
-        print(type(fileObject))
         with fileObject:
             try:
                 config = yaml.safe_load(fileObject)
@@ -43,13 +42,13 @@ class ShallowWaterGeometryConfig:
         swgc = cls(geometry['nx'], geometry['ny'], geometry['xmax'], geometry['ymax'])
         return swgc
   
-swgc1 = ShallowWaterGeometryConfig(10,20,100,200)
-print(swgc1)
-
-swgc2 = ShallowWaterGeometryConfig.from_YAML_filename('foo.yml')
-print(swgc2)
-
-fp = open('foo.yml', 'r')
-swgc3 = ShallowWaterGeometryConfig.from_YAML_file_object(fp)
-print(swgc3)
+#swgc1 = ShallowWaterGeometryConfig(10,20,100,200)
+#print(swgc1)
+#
+#swgc2 = ShallowWaterGeometryConfig.from_YAML_filename('foo.yml')
+#print(swgc2)
+#
+#fp = open('foo.yml', 'r')
+#swgc3 = ShallowWaterGeometryConfig.from_YAML_file_object(fp)
+#print(swgc3)
 

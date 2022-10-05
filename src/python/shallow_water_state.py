@@ -16,22 +16,25 @@ class ShallowWaterState:
         self.geometry = geometry
 
         # Initialize u
+        self.u = np.zeros((geometry.xme - geometry.xms + 1, geometry.yme - geometry.yms + 1))
         if (u):
-            self.u = u
-        else:
-            self.u = np.zeros((geometry.npx, geometry.npy))
+            for i in range(geometry.xps, geometry.xpe + 1):
+                for j in range(geometry.yps, geometry.ype + 1):
+                    self.u[i - geometry.xms, j - geometry.yms] = u[i - geometry.xps, j - geometry.yps]
 
         # Initialize v
+        self.v = np.zeros((geometry.xme - geometry.xms + 1, geometry.yme - geometry.yms + 1))
         if (v):
-            self.v = v
-        else:
-            self.v = np.zeros((geometry.npx, geometry.npy))
+            for i in range(geometry.xps, geometry.xpe + 1):
+                for j in range(geometry.yps, geometry.ype + 1):
+                    self.v[i - geometry.xms, j - geometry.yms] = v[i - geometry.xps, j - geometry.yps]
 
         # Initialize h
+        self.h = np.zeros((geometry.xme - geometry.xms + 1, geometry.yme - geometry.yms + 1))
         if (h):
-            self.h = h
-        else:
-            self.h = np.zeros((geometry.npx, geometry.npy))
+            for i in range(geometry.xps, geometry.xpe + 1):
+                for j in range(geometry.yps, geometry.ype + 1):
+                    self.h[i - geometry.xms, j - geometry.yms] = h[i - geometry.xps, j - geometry.yps]
 
         # ! Calculate the maximum wave speed from h
         _max_h = np.zeros(1, np.float64)
@@ -48,26 +51,6 @@ class ShallowWaterState:
 
     def exchange_halo(self):
 
-#    ! MPI variables
-#    integer            :: communicator
-#    integer, parameter :: ntag=1, stag=2, wtag=3, etag=4
-#    integer            :: irequest(8), istatus(MPI_STATUS_SIZE, 8), nrequests, ierr
-#    real(r8kind)       :: nsendbuffer(self.geometry.get_xps():self.geometry.get_xpe(), 3)
-#    real(r8kind)       :: ssendbuffer(self.geometry.get_xps():self.geometry.get_xpe(), 3)
-#    real(r8kind)       :: wsendbuffer(self.geometry.get_yps():self.geometry.get_ype(), 3)
-#    real(r8kind)       :: esendbuffer(self.geometry.get_yps():self.geometry.get_ype(), 3)
-#    real(r8kind)       :: nrecvbuffer(self.geometry.get_xps():self.geometry.get_xpe(), 3)
-#    real(r8kind)       :: srecvbuffer(self.geometry.get_xps():self.geometry.get_xpe(), 3)
-#    real(r8kind)       :: wrecvbuffer(self.geometry.get_yps():self.geometry.get_ype(), 3)
-#    real(r8kind)       :: erecvbuffer(self.geometry.get_yps():self.geometry.get_ype(), 3)
-#
-#    ! Indexing variables
-#    integer :: i, j
-#    integer :: xps, xpe, yps, ype
-#    integer :: xms, xme, yms, yme
-#    integer :: npx, npy
-#    integer :: north, south, west, east
-#
         # Get the MPI communicator from the geometry
         _communicator = self.geometry.communicator
 
@@ -99,116 +82,181 @@ class ShallowWaterState:
 
         # Post the non-blocking receive half of the exhange first to reduce overhead
         _nrequests = 0
+        _irequests = []
         _nrecvbuffer = np.zeros((_npx, 3))
         if (_north != -1):
-            _irequests[_nrequests] = _communicator.Irecv(_nrecvbuffer, _north, _stag)
+            _irequests.append(_communicator.Irecv(_nrecvbuffer, _north, _stag))
             _nrequests = _nrequests + 1
-#           call MPI_IRecv(nrecvbuffer, 3* npx, MPI_DOUBLE_PRECISION, north, stag, communicator, irequest(nrequests), ierr)
 
         _srecvbuffer = np.zeros((_npx, 3))
         if (_south != -1):
-            _irequests[_nrequests] = _communicator.Irecv(_srecvbuffer, _south, _ntag)
+            _irequests.append(_communicator.Irecv(_srecvbuffer, _south, _ntag))
             _nrequests = _nrequests + 1
-#           call MPI_IRecv(srecvbuffer, 3* npx, MPI_DOUBLE_PRECISION, south, ntag, communicator, irequest(nrequests), ierr)
 
         _wrecvbuffer = np.zeros((_npy, 3))
         if (_west != -1):
-            _irequests[_nrequests] = _communicator.Irecv(_wrecvbuffer, _west, _etag)
+            _irequests.append(_communicator.Irecv(_wrecvbuffer, _west, _etag))
             _nrequests = _nrequests + 1
-#           call MPI_IRecv(wrecvbuffer, 3* npy, MPI_DOUBLE_PRECISION, west, etag, communicator, irequest(nrequests), ierr)
 
         _erecvbuffer = np.zeros((_npy, 3))
         if (_east != -1):
-            _irequests[_nrequests] = _communicator.Irecv(_erecvbuffer, _east, _wtag)
+            _irequests.append(_communicator.Irecv(_erecvbuffer, _east, _wtag))
             _nrequests = _nrequests + 1
-#           call MPI_IRecv(erecvbuffer, 3* npy, MPI_DOUBLE_PRECISION, east, wtag, communicator, irequest(nrequests), ierr)
 
-#
-#        ! Pack the send buffers
-#        if (north != -1):
-#          do i = xps, xpe
-#            nsendbuffer(i, 1) = self.u(i, ype)
-#            nsendbuffer(i, 2) = self.v(i, ype)
-#            nsendbuffer(i, 3) = self.h(i, ype)
-#          end do
-#        end if
-#        if (south != -1):
-#          do i = xps, xpe
-#            ssendbuffer(i, 1) = self.u(i, yps)
-#            ssendbuffer(i, 2) = self.v(i, yps)
-#            ssendbuffer(i, 3) = self.h(i, yps)
-#          end do
-#        end if
-#        if (west != -1):
-#          do j = yps, ype
-#            wsendbuffer(j, 1) = self.u(xps, j)
-#            wsendbuffer(j, 2) = self.v(xps, j)
-#            wsendbuffer(j, 3) = self.h(xps, j)
-#          end do
-#        end if
-#        if (east != -1):
-#          do j = yps, ype
-#            esendbuffer(j, 1) = self.u(xpe, j)
-#            esendbuffer(j, 2) = self.v(xpe, j)
-#            esendbuffer(j, 3) = self.h(xpe, j)
-#          end do
-#        end if
-#
-#        ! Now post the non-blocking send half of the exchange
-#        if (north != -1):
-#           nrequests = nrequests + 1
-#           call MPI_ISend(nsendbuffer, 3 * npx, MPI_DOUBLE_PRECISION, north, ntag, communicator, irequest(nrequests), ierr)
-#        end if
-#        if (south != -1):
-#           nrequests = nrequests + 1
-#           call MPI_ISend(ssendbuffer, 3 * npx, MPI_DOUBLE_PRECISION, south, stag, communicator, irequest(nrequests), ierr)
-#        end if
-#        if (west != -1):
-#           nrequests = nrequests + 1
-#           call MPI_ISend(wsendbuffer, 3 * npy, MPI_DOUBLE_PRECISION, west, wtag, communicator, irequest(nrequests), ierr)
-#        end if
-#        if (east != -1):
-#           nrequests = nrequests + 1
-#           call MPI_ISend(esendbuffer, 3 * npy, MPI_DOUBLE_PRECISION, east, etag, communicator, irequest(nrequests), ierr)
-#        end if
-#
-#        ! Wait for the exchange to complete
-#        if (nrequests > 0):
-#          call MPI_Waitall(nrequests, irequest, istatus, ierr)
-#        end if
-#
-#        ! Unpack the receive buffers
-#        if (north != -1):
-#          do i = xps, xpe
-#            self.u(i, yme) = nrecvbuffer(i, 1)
-#            self.v(i, yme) = nrecvbuffer(i, 2)
-#            self.h(i, yme) = nrecvbuffer(i, 3)
-#          end do
-#        end if
-#        if (south != -1):
-#          do i = xps, xpe
-#            self.u(i, yms) = srecvbuffer(i, 1)
-#            self.v(i, yms) = srecvbuffer(i, 2)
-#            self.h(i, yms) = srecvbuffer(i, 3)
-#          end do
-#        end if
-#        if (west != -1):
-#          do j = yps, ype
-#            self.u(xms,j) = wrecvbuffer(j,1)
-#            self.v(xms,j) = wrecvbuffer(j,2)
-#            self.h(xms,j) = wrecvbuffer(j,3)
-#          end do
-#        end if
-#        if (east != -1):
-#          do j = yps, ype
-#            self.u(xme,j) = erecvbuffer(j,1)
-#            self.v(xme,j) = erecvbuffer(j,2)
-#            self.h(xme,j) = erecvbuffer(j,3)
-#          end do
-#        end if
+        # Pack the send buffers
+        _nsendbuffer = np.zeros((_npx, 3))
+        if (_north != -1):
+            for i in range(_xps, _xpe + 1):
+                _nsendbuffer[i - _xps, 0] = self.u[i - _xms, _ype - _yms]
+                _nsendbuffer[i - _xps, 1] = self.v[i - _xms, _ype - _yms]
+                _nsendbuffer[i - _xps, 2] = self.h[i - _xms, _ype - _yms]
+        _ssendbuffer = np.zeros((_npx, 3))
+        if (_south != -1):
+            for i in range(_xps, _xpe + 1):
+                _ssendbuffer[i - _xps, 0] = self.u[i - _xms, _yps - _yms]
+                _ssendbuffer[i - _xps, 1] = self.v[i - _xms, _yps - _yms]
+                _ssendbuffer[i - _xps, 2] = self.h[i - _xms, _yps - _yms]
+        _wsendbuffer = np.zeros((_npy, 3))
+        if (_west != -1):
+            for j in range(_yps, _ype + 1):
+                _wsendbuffer[j - _yps, 0] = self.u[_xps - _xms, j - _yms]
+                _wsendbuffer[j - _yps, 1] = self.v[_xps - _xms, j - _yms]
+                _wsendbuffer[j - _yps, 2] = self.h[_xps - _xms, j - _yms]
+        _esendbuffer = np.zeros((_npy, 3))
+        if (_east != -1):
+            for j in range(_yps, _ype + 1):
+                _esendbuffer[j - _yps, 0] = self.u[_xpe - _xms, j - _yms]
+                _esendbuffer[j - _yps, 1] = self.v[_xpe - _xms, j - _yms]
+                _esendbuffer[j - _yps, 2] = self.h[_xpe - _xms, j - _yms]
+
+        # Now post the non-blocking send half of the exchange
+        if (_north != -1):
+            _irequests.append(_communicator.Isend(_nsendbuffer, _north, _ntag))
+            _nrequests = _nrequests + 1
+
+        if (_south != -1):
+            _irequests.append(_communicator.Isend(_ssendbuffer, _south, _stag))
+            _nrequests = _nrequests + 1
+
+        if (_west != -1):
+            _irequests.append(_communicator.Isend(_wsendbuffer, _west, _wtag))
+            _nrequests = _nrequests + 1
+
+        if (_east != -1):
+            _irequests.append(_communicator.Isend(_esendbuffer, _east, _etag))
+            _nrequests = _nrequests + 1
+
+        # Wait for the exchange to complete
+        if (_nrequests > 0):
+            MPI.Request.Waitall(_irequests)
+
+        # Unpack the receive buffers
+        if (_north != -1):
+            for i in range(_xps, _xpe + 1):
+                self.u[i - _xps, _yme - _yms] = _nrecvbuffer[i - _xps, 0]
+                self.v[i - _xps, _yme - _yms] = _nrecvbuffer[i - _xps, 1]
+                self.h[i - _xps, _yme - _yms] = _nrecvbuffer[i - _xps, 2]
+        if (_south != -1):
+            for i in range(_xps, _xpe + 1):
+                self.u[i - _xps, _yms - _yms] = _srecvbuffer[i - _xps, 0]
+                self.v[i - _xps, _yms - _yms] = _srecvbuffer[i - _xps, 1]
+                self.h[i - _xps, _yms - _yms] = _srecvbuffer[i - _xps, 2]
+        if (_west != -1):
+            for j in range(_yps, _ype + 1):
+                self.u[_xms - _xms, j - _yps] = _wrecvbuffer[j - _yps, 0]
+                self.v[_xms - _xms, j - _yps] = _wrecvbuffer[j - _yps, 1]
+                self.h[_xms - _xms, j - _yps] = _wrecvbuffer[j - _yps, 2]
+        if (_east != -1):
+            for j in range(_yps, _ype + 1):
+                self.u[_xme - _xms, j - _yps] = _erecvbuffer[j - _yps, 0]
+                self.v[_xme - _xms, j - _yps] = _erecvbuffer[j - _yps, 1]
+                self.h[_xme - _xms, j - _yps] = _erecvbuffer[j - _yps, 2]
+
+
+    def scatter(self, u_full, v_full, h_full):
+
+        # Get the MPI communicator from the geometry
+        _communicator = self.geometry.communicator
+
+        # Get the number of MPI ranks from the geometry
+        _nranks = self.geometry.nranks
+
+        # Get the MPI rank of this process from the geometry
+        _myrank = self.geometry.rank
+
+        # Get the local indices (excluding the halo) from the geometry
+        _xms_local = np.full(1, self.geometry.xms, dtype=int)
+        _xme_local = np.full(1, self.geometry.xme, dtype=int)
+        _yms_local = np.full(1, self.geometry.yms, dtype=int)
+        _yme_local = np.full(1, self.geometry.yme, dtype=int)
+
+        # Calculate the local number of elements
+        _nelements_local = (_xme_local - _xms_local + 1) * (_yme_local - _yms_local + 1)
+
+        # Allocate space for the indices of each rank
+        if (_myrank == 0):
+            _xms = np.empty((_nranks), dtype=int)
+            _xme = np.empty((_nranks), dtype=int)
+            _yms = np.empty((_nranks), dtype=int)
+            _yme = np.empty((_nranks), dtype=int)
+        else:
+            _xms = np.empty((1), dtype=int)
+            _xme = np.empty((1), dtype=int)
+            _yms = np.empty((1), dtype=int)
+            _yme = np.empty((1), dtype=int)
+
+        # Gather the local indices for each rank
+        _communicator.Gather(_xms_local, _xms)
+        _communicator.Gather(_xme_local, _xme)
+        _communicator.Gather(_yms_local, _yms)
+        _communicator.Gather(_yme_local, _yme)
+
+        # Calculate the number of elements to send to each rank
+        if (_myrank == 0):
+            _nsend_elements = np.empty((_nranks), dtype=int)
+            for n in range(_nranks):
+                _nsend_elements[n] = (_xme[n] - _xms[n] + 1) * (_yme[n] - _yms[n] + 1)
+        else:
+            _nsend_elements = np.empty((1))
+
+        # Calculate the send buffer offsets for each rank
+        if (_myrank == 0):
+            _send_offsets =  np.empty((_nranks), dtype=int)
+            _send_offsets[0] = 0
+            for n in range(1,_nranks):
+                 _send_offsets[n] = _send_offsets[n-1] + _nsend_elements[n-1]
+        else:
+            _send_offsets = np.empty((1))
+
+        # Allocate a send buffer for scattering u, v, and h
+        if (_myrank == 0):
+            _send_buffer = np.empty((_nsend_elements.sum()))
+        else:
+            _send_buffer = np.empty((1))
+
+        # Fill the send buffer and scatter u, v, h
+        if (_myrank == 0):
+            for n in range(_nranks):
+                _send_buffer[_send_offsets[n]:_send_offsets[n] + _nsend_elements[n]] = (u_full[_xms[n]-1:_xme[n], _yms[n]-1:_yme[n]]).flatten()
+        _communicator.Scatterv([_send_buffer, _nsend_elements, _send_offsets, MPI.DOUBLE], self.u)
+        if (_myrank == 0):
+            for n in range(_nranks):
+                _send_buffer[_send_offsets[n]:_send_offsets[n] + _nsend_elements[n]] = (v_full[_xms[n]-1:_xme[n], _yms[n]-1:_yme[n]]).flatten()
+        _communicator.Scatterv([_send_buffer, _nsend_elements, _send_offsets, MPI.DOUBLE], self.v)
+        if (_myrank == 0):
+            for n in range(_nranks):
+                _send_buffer[_send_offsets[n]:_send_offsets[n] + _nsend_elements[n]] = (h_full[_xms[n]-1:_xme[n], _yms[n]-1:_yme[n]]).flatten()
+        _communicator.Scatterv([_send_buffer, _nsend_elements, _send_offsets, MPI.DOUBLE], self.h)
+
+
+
 
 comm = MPI.COMM_WORLD
 gc = ShallowWaterGeometryConfig.from_YAML_filename('foo.yml')
 g = ShallowWaterGeometry(gc, comm)
 s = ShallowWaterState(g)
 s.exchange_halo()
+u_full = np.zeros((g.nx, g.ny))
+v_full = np.zeros((g.nx, g.ny))
+h_full = np.zeros((g.nx, g.ny))
+s.scatter(u_full, v_full, h_full)
