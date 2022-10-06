@@ -17,21 +17,21 @@ class ShallowWaterState:
 
         # Initialize u
         self.u = np.zeros((geometry.xme - geometry.xms + 1, geometry.yme - geometry.yms + 1))
-        if (u):
+        if (u) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):
                     self.u[i - geometry.xms, j - geometry.yms] = u[i - geometry.xps, j - geometry.yps]
 
         # Initialize v
         self.v = np.zeros((geometry.xme - geometry.xms + 1, geometry.yme - geometry.yms + 1))
-        if (v):
+        if (v) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):
                     self.v[i - geometry.xms, j - geometry.yms] = v[i - geometry.xps, j - geometry.yps]
 
         # Initialize h
         self.h = np.zeros((geometry.xme - geometry.xms + 1, geometry.yme - geometry.yms + 1))
-        if (h):
+        if (h) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):
                     self.h[i - geometry.xms, j - geometry.yms] = h[i - geometry.xps, j - geometry.yps]
@@ -153,24 +153,24 @@ class ShallowWaterState:
         # Unpack the receive buffers
         if (_north != -1):
             for i in range(_xps, _xpe + 1):
-                self.u[i - _xps, _yme - _yms] = _nrecvbuffer[i - _xps, 0]
-                self.v[i - _xps, _yme - _yms] = _nrecvbuffer[i - _xps, 1]
-                self.h[i - _xps, _yme - _yms] = _nrecvbuffer[i - _xps, 2]
+                self.u[i - _xms, _yme - _yms] = _nrecvbuffer[i - _xps, 0]
+                self.v[i - _xms, _yme - _yms] = _nrecvbuffer[i - _xps, 1]
+                self.h[i - _xms, _yme - _yms] = _nrecvbuffer[i - _xps, 2]
         if (_south != -1):
             for i in range(_xps, _xpe + 1):
-                self.u[i - _xps, _yms - _yms] = _srecvbuffer[i - _xps, 0]
-                self.v[i - _xps, _yms - _yms] = _srecvbuffer[i - _xps, 1]
-                self.h[i - _xps, _yms - _yms] = _srecvbuffer[i - _xps, 2]
+                self.u[i - _xms, _yms - _yms] = _srecvbuffer[i - _xps, 0]
+                self.v[i - _xms, _yms - _yms] = _srecvbuffer[i - _xps, 1]
+                self.h[i - _xms, _yms - _yms] = _srecvbuffer[i - _xps, 2]
         if (_west != -1):
             for j in range(_yps, _ype + 1):
-                self.u[_xms - _xms, j - _yps] = _wrecvbuffer[j - _yps, 0]
-                self.v[_xms - _xms, j - _yps] = _wrecvbuffer[j - _yps, 1]
-                self.h[_xms - _xms, j - _yps] = _wrecvbuffer[j - _yps, 2]
+                self.u[_xms - _xms, j - _yms] = _wrecvbuffer[j - _yps, 0]
+                self.v[_xms - _xms, j - _yms] = _wrecvbuffer[j - _yps, 1]
+                self.h[_xms - _xms, j - _yms] = _wrecvbuffer[j - _yps, 2]
         if (_east != -1):
             for j in range(_yps, _ype + 1):
-                self.u[_xme - _xms, j - _yps] = _erecvbuffer[j - _yps, 0]
-                self.v[_xme - _xms, j - _yps] = _erecvbuffer[j - _yps, 1]
-                self.h[_xme - _xms, j - _yps] = _erecvbuffer[j - _yps, 2]
+                self.u[_xme - _xms, j - _yms] = _erecvbuffer[j - _yps, 0]
+                self.v[_xme - _xms, j - _yms] = _erecvbuffer[j - _yps, 1]
+                self.h[_xme - _xms, j - _yms] = _erecvbuffer[j - _yps, 2]
 
 
     def scatter(self, u_full, v_full, h_full):
@@ -334,8 +334,17 @@ class ShallowWaterState:
 comm = MPI.COMM_WORLD
 gc = ShallowWaterGeometryConfig.from_YAML_filename('foo.yml')
 g = ShallowWaterGeometry(gc, comm)
-s = ShallowWaterState(g)
+s = ShallowWaterState(g, u=np.full((g.npx,g.npy), comm.Get_rank()))
 s.exchange_halo()
+comm.Barrier()
+for n in range(comm.Get_size()):
+    if (comm.Get_rank() == n):
+        print(comm.Get_rank())
+        print(g.xms, g.xme, g.yms, g.yme)
+        print(g.xps, g.xpe, g.yps, g.ype)
+        print(g.xts, g.xte, g.yts, g.yte)
+        print(np.rot90(s.u))
+    comm.Barrier()
 u_full = np.zeros((g.nx, g.ny))
 v_full = np.zeros((g.nx, g.ny))
 h_full = np.zeros((g.nx, g.ny))
