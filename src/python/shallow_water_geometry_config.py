@@ -1,14 +1,14 @@
 import yaml
 import numpy as np
 
-class shallow_water_geometry_config:
+class ShallowWaterGeometryConfig:
     """Geometry config
     Can take the arguments nx, ny, xmax, ymax directy to assign to the class, or accept a yaml filepath.
     """
     
     def __init__(self, yamlpath=None, nx=None, ny=None, xmax=None, ymax=None):
         """
-        Set variables for the shallow_water_geometry_config class passed during instantiation.
+        Set variables for the ShallowWaterGeometryConfig class passed during instantiation.
         These can be instantiated from a yaml file (parm/shallow_water.yml), or passed directly,
         if nothing is passed, set default values.
         
@@ -18,7 +18,7 @@ class shallow_water_geometry_config:
                 nx, ny:      integer,  Number of gridpoints in x and y directions. 
                 xmax, ymax:  integer,  Maximum extent of the domain in the x and y directions. 
             Return:
-                An initialized shallow_water_geometry_config class
+                An initialized ShallowWaterGeometryConfig class
         """
 
         if (yamlpath): 
@@ -32,10 +32,10 @@ class shallow_water_geometry_config:
                 print('Error parsing file', file)
                 raise e
 
-            self.nx   = self.get_nx(param)
-            self.ny   = self.get_ny(param)
-            self.xmax = self.get_xmax(param)
-            self.ymax = self.get_ymax(param)
+            self.nx   = param['geometry']['nx']
+            self.ny   = param['geometry']['ny']
+            self.xmax = param['geometry']['xmax']
+            self.ymax = param['geometry']['ymax']
         
         else:     
         
@@ -43,27 +43,6 @@ class shallow_water_geometry_config:
             self.ny   = ny if ny is not None else np.int32(151)
             self.xmax = xmax if xmax is not None else np.float64(100000.0)
             self.ymax = ymax if ymax is not None else np.float64(100000.0)
-
-
-    def get_nx(self, data):
-        nx = np.int32(data['geometry_parm']['nx'])
-        self.nx = nx 
-        return nx
-
-    def get_ny(self, data):
-        ny = np.int32(data['geometry_parm']['ny'])
-        self.ny = ny 
-        return ny
-
-    def get_xmax(self, data):
-        xmax = np.float64(data['geometry_parm']['xmax'])
-        self.xmax = xmax 
-        return xmax
-
-    def get_ymax(self,data):
-        ymax = np.float64(data['geometry_parm']['ymax'])
-        self.ymax = ymax 
-        return ymax
 
     def __str__(self):
         return (
