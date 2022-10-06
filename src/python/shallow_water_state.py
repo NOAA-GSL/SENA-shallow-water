@@ -132,40 +132,43 @@ class ShallowWaterState:
 
         # Pack the send buffers
         if (north != -1):
-            for i in range(npx):
-                nsendbuffer[i, 0] = self.u[i, ype - 1]
-                nsendbuffer[i, 1] = self.v[i, ype - 1]
-                nsendbuffer[i, 2] = self.h[i, ype - 1]
+            for i in range(xps, xpe + 1):
+                nsendbuffer[i - xps, 0] = self.u[i - xms, ype - yms]
+                nsendbuffer[i - xps, 1] = self.v[i - xms, ype - yms]
+                nsendbuffer[i - xps, 2] = self.h[i - xms, ype - yms]
 
         if (south != -1):
-            for i in range(npx):
-                ssendbuffer[i, 0] = self.u[i, yps - 1]
-                ssendbuffer[i, 1] = self.v[i, yps - 1]
-                ssendbuffer[i, 2] = self.h[i, yps - 1]
+            for i in range(xps, xpe + 1):
+                ssendbuffer[i - xps, 0] = self.u[i - xms, yps - yms]
+                ssendbuffer[i - xps, 1] = self.v[i - xms, yps - yms]
+                ssendbuffer[i - xps, 2] = self.h[i - xms, yps - yms]
 
         if (west != -1):
-            for j in range(npy):
-                wsendbuffer[j, 0] = self.u[xps - 1, j]
-                wsendbuffer[j, 1] = self.v[xps - 1, j]
-                wsendbuffer[j, 2] = self.h[xps - 1, j]
+            for j in range(yps, ype + 1):
+                wsendbuffer[j - yps, 0] = self.u[xps - xms, j - yms]
+                wsendbuffer[j - yps, 1] = self.v[xps - xms, j - yms]
+                wsendbuffer[j - yps, 2] = self.h[xps - xms, j - yms]
 
         if (east != -1):
-            for j in range(npy):
-                esendbuffer[j, 0] = self.u[xpe - 1, j]
-                esendbuffer[j, 1] = self.v[xpe - 1, j]
-                esendbuffer[j, 2] = self.h[xpe - 1, j]
+            for j in range(yps, ype + 1):
+                esendbuffer[j - yps, 0] = self.u[xpe - xms, j - yms]
+                esendbuffer[j - yps, 1] = self.v[xpe - xms, j - yms]
+                esendbuffer[j - yps, 2] = self.h[xpe - xms, j - yms]
 
         # Now post the non-blocking send half of the exchange
         # Isend(buf, dest, tag=0)
         if (north != -1):
             irequests.append(communicator.Isend(nsendbuffer, north, tag=ntag))
             nrequests = nrequests + 1
+
         if (south != -1):
             irequests.append(communicator.Isend(ssendbuffer, south, tag=stag))
             nrequests = nrequests + 1
+
         if (west != -1):
             irequests.append(communicator.Isend(wsendbuffer, west, tag=wtag))
             nrequests = nrequests + 1
+            
         if (east != -1):
             irequests.append(communicator.Isend(esendbuffer, east, tag=etag))
             nrequests = nrequests + 1
@@ -177,28 +180,28 @@ class ShallowWaterState:
         
         # Unpack the receive buffers
         if (north != -1):
-            for i in range(npx):
-                self.u[i, yme - 1] = nrecvbuffer[i, 0]
-                self.v[i, yme - 1] = nrecvbuffer[i, 1]
-                self.h[i, yme - 1] = nrecvbuffer[i, 2]
+            for i in range(xps, xpe + 1):
+                self.u[i - xms, yme - yms] = nrecvbuffer[i - xps, 0]
+                self.v[i - xms, yme - yms] = nrecvbuffer[i - xps, 1]
+                self.h[i - xms, yme - yms] = nrecvbuffer[i - xps, 2]
 
         if (south != -1):
-            for i in range(npx):
-                self.u[i, yms] = srecvbuffer[i, 0]
-                self.v[i, yms] = srecvbuffer[i, 1]
-                self.h[i, yms] = srecvbuffer[i, 2]
+            for i in range(xps, xpe + 1):
+                self.u[i - xms, yms - yms] = srecvbuffer[i - xps, 0]
+                self.v[i - xms, yms - yms] = srecvbuffer[i - xps, 1]
+                self.h[i - xms, yms - yms] = srecvbuffer[i - xps, 2]
 
         if (west != -1):
-            for j in range(npy):
-                self.u[xms,j] = wrecvbuffer[j,0]
-                self.v[xms,j] = wrecvbuffer[j,1]
-                self.h[xms,j] = wrecvbuffer[j,2]
+            for j in range(yps, ype + 1):
+                self.u[xms - xms, j - yms] = wrecvbuffer[j - yps, 0]
+                self.v[xms - xms, j - yms] = wrecvbuffer[j - yps, 1]
+                self.h[xms - xms, j - yms] = wrecvbuffer[j - yps, 2]
 
         if (east != -1):
-            for j in range(npy):
-                self.u[xme - 1,j] = erecvbuffer[j,0]
-                self.v[xme - 1,j] = erecvbuffer[j,1]
-                self.h[xme - 1,j] = erecvbuffer[j,2]
+            for j in range(yps, ype + 1):
+                self.u[xme - xms, j - yms] = erecvbuffer[j - yps, 0]
+                self.v[xme - xms, j - yms] = erecvbuffer[j - yps, 1]
+                self.h[xme - xms, j - yms] = erecvbuffer[j - yps, 2]
 
 
     # Scatter full state 
@@ -398,30 +401,9 @@ class ShallowWaterState:
         return self.h[self.geometry.xps : self.geometry.xpe, self.geometry.yps : self.geometry.ype]
 
 
-    #### Pointers are not used, but ported anyways
-    # Get pointer to state u
-    def get_u_ptr(self, u_ptr):
-        u_ptr = self.u
-
-    # Get pointer to state v
-    def get_v_ptr(self, v_ptr):
-        v_ptr = self.v
-    
-    # Get pointer to state h
-    def get_h_ptr(self, h_ptr):
-        h_ptr = self.h
-
-    # Get state clock
-    def get_clock(self):
-        return self.clock
-
     # Advance clock by dt 
     def advance_clock(self, dt):
         self.clock = self.clock + dt
-
-    # Get state max wavespeed 
-    def get_max_wavespeed(self):
-        return self.max_wavespeed
 
     # Read state from NetCDF file 
     def read_NetCDF(self, filename: str):

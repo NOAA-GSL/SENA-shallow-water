@@ -13,7 +13,7 @@ from shallow_water_state import ShallowWaterState
 
 comm = MPI.COMM_WORLD 
 
-gc = ShallowWaterGeometryConfig(yamlpath="../../parm/shallow_water_test.yml")
+gc = ShallowWaterGeometryConfig(yamlpath="../test_input/test_shallow_water_config.yml")
 
 g = ShallowWaterGeometry(geometry=gc, mpi_comm=comm)
 
