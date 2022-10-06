@@ -343,10 +343,127 @@ class ShallowWaterState:
         # Return the full domain arrays (valid on rank 0 only)
         return _u_full, _v_full, _h_full
 
+
+    def write(self, filename):
+
+        from netCDF4 import Dataset
+        import time
+
+        # Get the MPI rank of this process from the geometry
+        _myrank = self.geometry.rank
+
+        # Get the full grid size from the geometry
+        _nx = self.geometry.nx
+        _ny = self.geometry.ny
+
+        # Gather full u, v, and h
+        _u_full, _v_full, _h_full = self.gather()
+
+        # Write the full state
+        if (_myrank == 0):
+
+            # Open new file, overwriting previous contents
+            _dataset = Dataset(filename, "w")
+
+            # Write Global Attributes
+            _dataset.creation_date = time.strftime("%Y/%m/%d %H:%M:%S",time.localtime())
+            _dataset.model_name = "Shallow Water"
+            _dataset.xmax = self.geometry.xmax
+            _dataset.ymax = self.geometry.ymax
+            _dataset.clock = self.clock
+
+            # Define the x/y dimensions
+            _nxDim = _dataset.createDimension("nx", _nx)
+            _nyDim = _dataset.createDimension("ny", _ny)
+
+            # Define the x/y fields
+            _xVar = _dataset.createVariable("x", "f8", (_nxDim,))
+            _xVar.long_name = "x"
+            _xVar.units = "Nondimensional"
+            _yVar = _dataset.createVariable("y", "f8", (_nyDim,))
+            _yVar.long_name = "y"
+            _yVar.units = "Nondimensional"
+
+            # Define the u/v/h variables
+            _uVar = _dataset.createVariable("U", "f8", (_nxDim, _nyDim))
+            _uVar.long_name = "Zonal Velocity"
+            _uVar.units = "m / s"
+            _vVar = _dataset.createVariable("V", "f8", (_nxDim, _nyDim))
+            _vVar.long_name = "Meridional Velocity"
+            _vVar.units = "m / s"
+            _hVar = _dataset.createVariable("H", "f8", (_nxDim, _nyDim))
+            _hVar.long_name = "Pressure Surface Height"
+            _hVar.units = "m"
+
+            # Fill the x variable
+            _dx = self.geometry.dx
+            for i in range(_nx):
+                _xVar[i] = i * _dx
+
+            # Fill the y variable
+            _dy = self.geometry.dy
+            for i in range(_ny):
+                _yVar[i] = i * _dy
+
+            # Fill the u, v, h variables
+            _uVar[:,:] = _u_full[:,:]
+            _vVar[:,:] = _v_full[:,:]
+            _hVar[:,:] = _h_full[:,:]
+
+            # Close the NetCDF file
+            _dataset.close()
+
+    def read(self, filename):
+
+        from netCDF4 import Dataset
+        import time
+
+        # Get the MPI rank of this process from the geometry
+        _myrank = self.geometry.rank
+
+        # Read the full state
+        if (_myrank == 0):
+
+            # Open new file for reading
+            _dataset = Dataset(filename, "r")
+
+            # Read global attributes
+            _xmax = _dataset.xmax
+            _ymax = _dataset.ymax
+            _clock = _dataset.clock
+
+            # Read the model dimensions
+            _nx = len(_dataset.dimensions["nx"])
+            _ny = len(_dataset.dimensions["ny"])
+
+            # Check to make sure state read in matches this state's geometry
+            if (self.geometry.nx != _nx or self.geometry.ny != _ny or
+                self.geometry.xmax != _xmax or self.geometry.ymax != _ymax):
+                self.geometry.communicator.Abort()
+
+            # Get the u, v, h
+            _u_full = np.empty((_nx, _ny))
+            _u_full[:,:] = _dataset.variables["U"][:,:]
+            _v_full = np.empty((_nx, _ny))
+            _v_full[:,:] = _dataset.variables["V"][:,:]
+            _h_full = np.empty((_nx, _ny))
+            _h_full[:,:] = _dataset.variables["H"][:,:]
+
+            return _u_full, _v_full, _h_full
+
+
 comm = MPI.COMM_WORLD
 gc = ShallowWaterGeometryConfig.from_YAML_filename('foo.yml')
 g = ShallowWaterGeometry(gc, comm)
-s = ShallowWaterState(g, u=np.full((g.npx,g.npy), comm.Get_rank()))
+s = ShallowWaterState(g, u=np.full((g.npx,g.npy), comm.Get_rank()),
+                         v=np.full((g.npx,g.npy), comm.Get_rank()+9),
+                         h=np.full((g.npx,g.npy), comm.Get_rank()+18))
+s.write("foo.nc")
+if (comm.Get_rank() == 0):
+    u_full, v_full, h_full = s.read("foo.nc")
+    print(np.rot90(u_full))
+    print(np.rot90(v_full))
+    print(np.rot90(h_full))
 s.exchange_halo()
 for n in range(comm.Get_size()):
     if (comm.Get_rank() == n):

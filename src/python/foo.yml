@@ -1,6 +1,6 @@
 geometry: {
   nx: 9,
   ny: 9,
-  xmax: 100,
-  ymax: 200
+  xmax: 100.0,
+  ymax: 200.0
 }
