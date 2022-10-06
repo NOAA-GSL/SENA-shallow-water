@@ -249,7 +249,7 @@ class ShallowWaterState:
         _communicator.Scatterv([_send_buffer, _nsend_elements, _send_offsets, MPI.DOUBLE], self.h)
 
 
-    def gather(self, u_full, v_full, h_full):
+    def gather(self):
 
         # Get the MPI communicator from the geometry
         _communicator = self.geometry.communicator
@@ -271,6 +271,16 @@ class ShallowWaterState:
         _xme_local = self.geometry.xme
         _yms_local = self.geometry.yms
         _yme_local = self.geometry.yme
+
+        # Allocate full domain arrays for the gather
+        if (_myrank == 0):
+            _u_full = np.zeros((self.geometry.nx, self.geometry.ny))
+            _v_full = np.zeros((self.geometry.nx, self.geometry.ny))
+            _h_full = np.zeros((self.geometry.nx, self.geometry.ny))
+        else:
+            _u_full = None
+            _v_full = None
+            _h_full = None
 
         # Calculate the local number of elements
         _nelements_local = (_xpe_local - _xps_local + 1) * (_ype_local - _yps_local + 1)
@@ -320,22 +330,38 @@ class ShallowWaterState:
         _communicator.Gatherv(np.ascontiguousarray(self.u[_xps_local-_xms_local:_xpe_local-_xms_local+1, _yps_local-_yms_local:_ype_local-_yms_local+1]), [_recv_buffer, _nrecv_elements, _recv_offsets, MPI.DOUBLE])
         if (_myrank == 0):
             for n in range(_nranks):
-                u_full[_xps[n]-1:_xpe[n], _yps[n]-1:_ype[n]] = np.reshape(_recv_buffer[_recv_offsets[n]:_recv_offsets[n]+_nrecv_elements[n]], (_xpe[n] - _xps[n] + 1, _ype[n] - _yps[n] + 1))
+                _u_full[_xps[n]-1:_xpe[n], _yps[n]-1:_ype[n]] = np.reshape(_recv_buffer[_recv_offsets[n]:_recv_offsets[n]+_nrecv_elements[n]], (_xpe[n] - _xps[n] + 1, _ype[n] - _yps[n] + 1))
         _communicator.Gatherv(np.ascontiguousarray(self.v[_xps_local-_xms_local:_xpe_local-_xms_local+1, _yps_local-_yms_local:_ype_local-_yms_local+1]), [_recv_buffer, _nrecv_elements, _recv_offsets, MPI.DOUBLE])
         if (_myrank == 0):
             for n in range(_nranks):
-                v_full[_xps[n]-1:_xpe[n], _yps[n]-1:_ype[n]] = np.reshape(_recv_buffer[_recv_offsets[n]:_recv_offsets[n]+_nrecv_elements[n]], (_xpe[n] - _xps[n] + 1, _ype[n] - _yps[n] + 1))
+                _v_full[_xps[n]-1:_xpe[n], _yps[n]-1:_ype[n]] = np.reshape(_recv_buffer[_recv_offsets[n]:_recv_offsets[n]+_nrecv_elements[n]], (_xpe[n] - _xps[n] + 1, _ype[n] - _yps[n] + 1))
         _communicator.Gatherv(np.ascontiguousarray(self.h[_xps_local-_xms_local:_xpe_local-_xms_local+1, _yps_local-_yms_local:_ype_local-_yms_local+1]), [_recv_buffer, _nrecv_elements, _recv_offsets, MPI.DOUBLE])
         if (_myrank == 0):
             for n in range(_nranks):
-                h_full[_xps[n]-1:_xpe[n], _yps[n]-1:_ype[n]] = np.reshape(_recv_buffer[_recv_offsets[n]:_recv_offsets[n]+_nrecv_elements[n]], (_xpe[n] - _xps[n] + 1, _ype[n] - _yps[n] + 1))
+                _h_full[_xps[n]-1:_xpe[n], _yps[n]-1:_ype[n]] = np.reshape(_recv_buffer[_recv_offsets[n]:_recv_offsets[n]+_nrecv_elements[n]], (_xpe[n] - _xps[n] + 1, _ype[n] - _yps[n] + 1))
 
+        # Return the full domain arrays (valid on rank 0 only)
+        return _u_full, _v_full, _h_full
 
 comm = MPI.COMM_WORLD
 gc = ShallowWaterGeometryConfig.from_YAML_filename('foo.yml')
 g = ShallowWaterGeometry(gc, comm)
 s = ShallowWaterState(g, u=np.full((g.npx,g.npy), comm.Get_rank()))
 s.exchange_halo()
+for n in range(comm.Get_size()):
+    if (comm.Get_rank() == n):
+        print(comm.Get_rank())
+        print(g.xms, g.xme, g.yms, g.yme)
+        print(g.xps, g.xpe, g.yps, g.ype)
+        print(g.xts, g.xte, g.yts, g.yte)
+        print(np.rot90(s.u))
+    comm.Barrier()
+comm.Barrier()
+u_full, v_full, h_full = s.gather()
+comm.Barrier()
+if (comm.Get_rank() == 0):
+    print(np.rot90(u_full))
+s.scatter(u_full, v_full, h_full)
 comm.Barrier()
 for n in range(comm.Get_size()):
     if (comm.Get_rank() == n):
@@ -345,8 +371,3 @@ for n in range(comm.Get_size()):
         print(g.xts, g.xte, g.yts, g.yte)
         print(np.rot90(s.u))
     comm.Barrier()
-u_full = np.zeros((g.nx, g.ny))
-v_full = np.zeros((g.nx, g.ny))
-h_full = np.zeros((g.nx, g.ny))
-s.scatter(u_full, v_full, h_full)
-s.gather(u_full, v_full, h_full)
