@@ -468,71 +468,71 @@ class ShallowWaterState:
         self.geometry.communicator.Bcast(_clock)
         self.clock = _clock[0]
 
-comm = MPI.COMM_WORLD
-gc = ShallowWaterGeometryConfig.from_YAML_filename('foo.yml')
-g = ShallowWaterGeometry(gc, comm)
-s = ShallowWaterState(g, u=np.full((g.npx,g.npy), comm.Get_rank()),
-                         v=np.full((g.npx,g.npy), comm.Get_rank()+9),
-                         h=np.full((g.npx,g.npy), comm.Get_rank()+18))
-
-# Initialization
-if (comm.Get_rank() == 0): print("Initialization....")
-for n in range(comm.Get_size()):
-    if (comm.Get_rank() == n):
-        print(comm.Get_rank())
-        print(np.rot90(s.u))
-    comm.Barrier()
-
-# Halo exchange
-if (comm.Get_rank() == 0): print("Halo Exchange....")
-s.exchange_halo()
-for n in range(comm.Get_size()):
-    if (comm.Get_rank() == n):
-        print(comm.Get_rank())
-        print(np.rot90(s.u))
-    comm.Barrier()
-
-# Gather
-if (comm.Get_rank() == 0): print("Gather....")
-u_full, v_full, h_full = s.gather()
-if (comm.Get_rank() == 0):
-    print(np.rot90(u_full))
-
-# Scatter
-if (comm.Get_rank() == 0): print("Scatter....")
-s.u[:,:]= 0
-s.v[:,:]= 0
-s.h[:,:]= 0
-s.scatter(u_full, v_full, h_full)
-for n in range(comm.Get_size()):
-    if (comm.Get_rank() == n):
-        print(comm.Get_rank())
-        print(np.rot90(s.u))
-        print(s.clock)
-    comm.Barrier()
-
-# Read/Write
-if (comm.Get_rank() == 0): print("Read/Write....")
-s.write("foo.nc")
-s.u[:,:]= 0
-s.v[:,:]= 0
-s.h[:,:]= 0
-s.clock = -1.0
-s.read("foo.nc")
-for n in range(comm.Get_size()):
-    if (comm.Get_rank() == n):
-        print(comm.Get_rank())
-        print(np.rot90(s.u))
-        print(s.clock)
-    comm.Barrier()
-
-# Indices
-if (comm.Get_rank() == 0): print("Indices....")
-for n in range(comm.Get_size()):
-    if (comm.Get_rank() == n):
-        print(comm.Get_rank())
-        print(g.xms, g.xme, g.yms, g.yme)
-        print(g.xps, g.xpe, g.yps, g.ype)
-        print(g.xts, g.xte, g.yts, g.yte)
-        print(np.rot90(s.u))
-    comm.Barrier()
+#comm = MPI.COMM_WORLD
+#gc = ShallowWaterGeometryConfig.from_YAML_filename('foo.yml')
+#g = ShallowWaterGeometry(gc, comm)
+#s = ShallowWaterState(g, u=np.full((g.npx,g.npy), comm.Get_rank()),
+#                         v=np.full((g.npx,g.npy), comm.Get_rank()+9),
+#                         h=np.full((g.npx,g.npy), comm.Get_rank()+18))
+#
+## Initialization
+#if (comm.Get_rank() == 0): print("Initialization....")
+#for n in range(comm.Get_size()):
+#    if (comm.Get_rank() == n):
+#        print(comm.Get_rank())
+#        print(np.rot90(s.u))
+#    comm.Barrier()
+#
+## Halo exchange
+#if (comm.Get_rank() == 0): print("Halo Exchange....")
+#s.exchange_halo()
+#for n in range(comm.Get_size()):
+#    if (comm.Get_rank() == n):
+#        print(comm.Get_rank())
+#        print(np.rot90(s.u))
+#    comm.Barrier()
+#
+## Gather
+#if (comm.Get_rank() == 0): print("Gather....")
+#u_full, v_full, h_full = s.gather()
+#if (comm.Get_rank() == 0):
+#    print(np.rot90(u_full))
+#
+## Scatter
+#if (comm.Get_rank() == 0): print("Scatter....")
+#s.u[:,:]= 0
+#s.v[:,:]= 0
+#s.h[:,:]= 0
+#s.scatter(u_full, v_full, h_full)
+#for n in range(comm.Get_size()):
+#    if (comm.Get_rank() == n):
+#        print(comm.Get_rank())
+#        print(np.rot90(s.u))
+#        print(s.clock)
+#    comm.Barrier()
+#
+## Read/Write
+#if (comm.Get_rank() == 0): print("Read/Write....")
+#s.write("foo.nc")
+#s.u[:,:]= 0
+#s.v[:,:]= 0
+#s.h[:,:]= 0
+#s.clock = -1.0
+#s.read("foo.nc")
+#for n in range(comm.Get_size()):
+#    if (comm.Get_rank() == n):
+#        print(comm.Get_rank())
+#        print(np.rot90(s.u))
+#        print(s.clock)
+#    comm.Barrier()
+#
+## Indices
+#if (comm.Get_rank() == 0): print("Indices....")
+#for n in range(comm.Get_size()):
+#    if (comm.Get_rank() == n):
+#        print(comm.Get_rank())
+#        print(g.xms, g.xme, g.yms, g.yme)
+#        print(g.xps, g.xpe, g.yps, g.ype)
+#        print(g.xts, g.xte, g.yts, g.yte)
+#        print(np.rot90(s.u))
+#    comm.Barrier()
