@@ -202,22 +202,45 @@ s = ShallowWaterState(g, h=h)
 s.write("state_0.nc")
 
 # Advance the model state
-m.adv_nsteps(s, 200)
+#m.adv_nsteps(s, 200)
 
 # Write the final state
-s.write("state_200.nc")
+#s.write("state_200.nc")
 
-#def animate(n):
-#    m.adv_nsteps(s, 1)
-#    pc.set_array(s.h)
-#
-## Plot animation
-#X, Y = np.meshgrid(np.linspace(0, g.xmax, g.npx), np.linspace(0, g.ymax, g.npy))
-#fig, axs = plt.subplots()
-#pc = axs.pcolormesh(X, Y, s.h, vmin=4990, vmax=5030, cmap='nipy_spectral')
-#fig.colorbar(pc, ax=axs)
-#fig.savefig('test0.png')
-#anim = animation.FuncAnimation(fig, animate, interval=125, frames=500)
-#anim.save('test.gif')
-#fig.savefig('test500.png') 
+def animate(n):
+    m.adv_nsteps(s, 1)
+    pc.set_array(s.h.data)
+
+import matplotlib.colors as colors
+class ColormapNormalize(colors.Normalize):
+    def __init__(self, vmin=None, vmax=None, v1=None, v2=None, clip=False):
+        self.v1 = v1
+        self.v2 = v2
+        super().__init__(vmin, vmax, clip)
+
+    def __call__(self, value, clip=None):
+        # I'm ignoring masked values and all kinds of edge cases to make a
+        # simple example...
+        # Note also that we must extrapolate beyond vmin/vmax
+        x, y = [self.vmin, self.v1, self.v2, self.vmax], [0, 0.1, 0.9, 1.]
+        return np.ma.masked_array(np.interp(value, x, y,
+                                            left=-np.inf, right=np.inf))
+
+    def inverse(self, value):
+        y, x = [self.vmin, self.v1, self.v2, self.vmax], [0, 0.1, 0.9, 1]
+        return np.interp(value, x, y, left=-np.inf, right=np.inf)
+
+
+
+# Plot animation
+X, Y = np.meshgrid(np.linspace(0, g.xmax, g.npx), np.linspace(0, g.ymax, g.npy))
+fig, axs = plt.subplots()
+norm = ColormapNormalize(vmin=4990, vmax=5030, v1=4995, v2=5005)
+pc = axs.pcolormesh(X, Y, s.h.data, cmap='nipy_spectral', norm=norm)
+cb = fig.colorbar(pc, ax=axs, extend='both')
+fig.savefig('test0.png')
+anim = animation.FuncAnimation(fig, animate, interval=125, frames=500)
+anim.save('test.gif')
+fig.savefig('test500.png')
+s.write("state_500.nc")
 
