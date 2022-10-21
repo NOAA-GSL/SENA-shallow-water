@@ -14,6 +14,12 @@ model:
 
 runtime:
  start_step: 0
- run_steps: 734
- output_interval_steps: 3
+ run_steps: 10
+ output_interval_steps: 5
  io_format: "NETCDF"
+
+gt4py_vars:
+ backend: "numpy"
+ dtype: "np.float64"
+ F_TYPE: "np.float64"
+ I_TYPE: "int"

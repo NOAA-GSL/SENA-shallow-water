@@ -19,7 +19,7 @@ g = ShallowWaterGeometry(geometry=gc, mpi_comm=comm)
 
 print(g.__dict__)
 
-test_shallow_water_state = ShallowWaterState(geometry=g, clock=0.0) # u=np.full((g.npx,g.npx), comm.Get_rank())
+test_shallow_water_state = ShallowWaterState(geometry=g, clock=0.0) 
 
 test_shallow_water_state.exchange_halo()
 for n in range(comm.Get_size()):

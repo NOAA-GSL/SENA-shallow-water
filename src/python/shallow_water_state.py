@@ -2,13 +2,14 @@ import time
 from mpi4py import MPI
 import numpy as np
 from netCDF4 import Dataset
+import gt4py.storage as gt_storage
 
 from shallow_water_geometry import ShallowWaterGeometry
 
 
 class ShallowWaterState:
 
-    def __init__(self, geometry: ShallowWaterGeometry, clock: np.float64, u=None, v=None, h=None):
+    def __init__(self, geometry: ShallowWaterGeometry, clock: np.float64, backend="numpy", u=None, v=None, h=None):
         """
         Initialized a shallow water state class 
 
@@ -21,9 +22,12 @@ class ShallowWaterState:
         """
         # Set the physical constant of gravity
         _g = np.float64(9.81)
-        
+
         # Set the geometry associated with this state
         self.geometry = geometry
+
+        # Set the GT4Py backend to the state
+        self.backend = backend
 
         # Get the domain index range for this patch from the geometry
         _xps = geometry.xps
@@ -38,9 +42,9 @@ class ShallowWaterState:
         _yme = geometry.yme
 
         # Allocate u, v, h 
-        self.u = np.zeros((_xme - _xms + 1, _yme - _yms + 1), np.float64)
-        self.v = np.zeros((_xme - _xms + 1, _yme - _yms + 1), np.float64)
-        self.h = np.zeros((_xme - _xms + 1, _yme - _yms + 1), np.float64)
+        self.u = gt_storage.zeros(backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
+        self.v = gt_storage.zeros(backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
+        self.h = gt_storage.zeros(backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
 
         # Initialize u 
         if (u) is not None:
@@ -426,9 +430,9 @@ class ShallowWaterState:
             _ny = _shallow_water_data.dimensions['ny'].size
                         
             # Read/Create global attributes
-            _xmax = _shallow_water_data.getncattr("xmax")
-            _ymax = _shallow_water_data.getncattr("ymax")
-            _clock = _shallow_water_data.getncattr("clock")
+            _xmax  = _shallow_water_data.getncattr("xmax")
+            _ymax  = _shallow_water_data.getncattr("ymax")
+            _clock = np.full(1,_shallow_water_data.getncattr("clock"))
             
             # Check to make sure state read in matches this state's geometry
             if (self.geometry.nx != _nx or self.geometry.ny != _ny or self.geometry.xmax != _xmax or self.geometry.ymax != _ymax):
@@ -446,20 +450,25 @@ class ShallowWaterState:
             _h_full = np.empty((_nx,_ny))
             _h_full[:,:] = _shallow_water_data.variables["H"][:,:]
     
-            # Flush buffers
-            _shallow_water_data.sync()
-    
-            # Close the NetCDF file
-            _shallow_water_data.close()
+        else:
+            _u_full = np.empty(1)
+            _v_full = np.empty(1)
+            _h_full = np.empty(1)
+            _clock = np.empty(1)
+
+        # Flush buffers
+        _shallow_water_data.sync()
+        # Close the NetCDF file
+        _shallow_water_data.close()
 
         # Scatter u, v, and h
         self.scatter(u_full=_u_full, v_full=_v_full, h_full=_h_full)
 
-        # Now broadcast the clock
+        # Broadcast the clock
         if (myrank == 0):
-            self.clock = np.float64(_clock)
+            self.clock = _clock[0]
         
-        communicator.bcast(self.clock)
+        communicator.Bcast(_clock)
 
         return _u_full, _v_full, _h_full
 

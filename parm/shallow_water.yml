@@ -4,7 +4,6 @@ geometry:
  xmax: 100000.0
  ymax: 100000.0
 
-
 model:
  dt: 2.0
  u0: 0.0
@@ -14,7 +13,12 @@ model:
 
 runtime:
  start_step: 0
- run_steps: 734
+ run_steps: 10
  output_interval_steps: 3
  io_format: "NETCDF"
 
+gt4py_vars:
+ backend: "numpy"
+ dtype: "np.float64"
+ F_TYPE: "np.float64"
+ I_TYPE: "int"
