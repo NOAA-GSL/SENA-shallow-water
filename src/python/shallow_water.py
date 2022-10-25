@@ -22,11 +22,10 @@ def run_shallow_water(config_file: str, filename=None) -> ShallowWaterModel:
     with open(config_file, mode="r") as f: 
         config = yaml.safe_load(f)
 
-    # Set config variables 
+    # Set run time config variables 
     _start_step = config['runtime']['start_step']
     _run_steps = config['runtime']['run_steps']
     _output_interval_steps = config['runtime']['output_interval_steps']
-
 
     # Create a shallow water geometry configuration from yaml configuration
     geometry_config = ShallowWaterGeometryConfig(yamlpath=config_file)
@@ -39,13 +38,13 @@ def run_shallow_water(config_file: str, filename=None) -> ShallowWaterModel:
 
     if (_start_step != 0 or filename is not None):
 
-        state = ShallowWaterState(geometry=geometry, clock=0.0)
+        state = ShallowWaterState(geometry=geometry, backend=model_config.backend, clock=0.0)
 
         state.read_NetCDF(filename)
 
     else:
         # Create a state with a tsunami pulse in it to initialize field h
-        _h = gt_storage.zeros(config['gt4py_vars']['backend'], default_origin=(1,1), shape=(geometry.npx, geometry.npy), dtype=np.float64)
+        _h = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(geometry.npx, geometry.npy), dtype=model_config.F_TYPE)
         xmid = geometry.xmax / 2.0
         ymid = geometry.ymax / 2.0
         sigma = np.floor(geometry.xmax / 20.0)
@@ -54,7 +53,7 @@ def run_shallow_water(config_file: str, filename=None) -> ShallowWaterModel:
                 dsqr = (i * geometry.dx - xmid)**2 + (j * geometry.dy - ymid)**2
                 _h[i - geometry.xps, j - geometry.yps] = 5000.0 + np.exp(-dsqr / sigma**2) * (model_config.h0 - 5000.0)
         
-        state = ShallowWaterState(geometry, clock=0.0, h=_h)
+        state = ShallowWaterState(geometry, clock=0.0, backend=model_config.backend, h=_h)
 
     # Initialize shallow water model object
     model = ShallowWaterModel(model_config, geometry)

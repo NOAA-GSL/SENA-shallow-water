@@ -1,4 +1,3 @@
-from mpi4py import MPI
 import numpy as np
 import gt4py.gtscript as gtscript
 import gt4py.storage as gt_storage
@@ -6,13 +5,14 @@ import gt4py.storage as gt_storage
 from shallow_water_model_config import ShallowWaterModelConfig
 from shallow_water_geometry import ShallowWaterGeometry
 from shallow_water_state import ShallowWaterState
+from stencils import stencils
 
 
 class ShallowWaterModel:
 
-    backend = "numpy"
-    F_TYPE = np.float64
-    I_TYPE = np.int32
+    backend : str
+    F_TYPE : np.dtype 
+    I_TYPE : np.dtype 
     # Use a 2D Field for the GT4Py Stencils
     FloatFieldIJ = gtscript.Field[gtscript.IJ, np.float64]
 
@@ -21,6 +21,10 @@ class ShallowWaterModel:
         self.config = config 
         self.geometry = geometry
         self.dt = config.dt
+
+        self.backend = config.backend
+        self.F_TYPE = config.F_TYPE
+        self.I_TYPE = config.I_TYPE
 
         # Initialize b (currently unused)
         self.b = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
@@ -75,7 +79,7 @@ class ShallowWaterModel:
             state.exchange_halo()   
 
             # Update the domain boundaries            
-            self.update_boundaries(south  = self.geometry.south,
+            stencils.update_boundaries(south  = self.geometry.south,
                                    north  = self.geometry.north,
                                    west   = self.geometry.west,
                                    east   = self.geometry.east,
@@ -89,7 +93,7 @@ class ShallowWaterModel:
                                    domain = (_xme - _xms + 1, _yme - _yms + 1, 1))
 
             # Update the domain interior
-            self.update_interior(u      = state.u,
+            stencils.update_interior(u      = state.u,
                                  v      = state.v,
                                  h      = state.h,
                                  b      = self.b,
@@ -114,72 +118,72 @@ class ShallowWaterModel:
 
 
     # Get model state one step in the future for the domain interior
-    @gtscript.stencil(backend=backend)
-    def update_interior(u:     FloatFieldIJ,
-                        v:     FloatFieldIJ,
-                        h:     FloatFieldIJ,
-                        b:     FloatFieldIJ,
-                        u_new: FloatFieldIJ,
-                        v_new: FloatFieldIJ,
-                        h_new: FloatFieldIJ,
-                        dtdx:  F_TYPE,
-                        dtdy:  F_TYPE,
-                        g:     F_TYPE):
+    # @gtscript.stencil(backend=backend)
+    # def update_interior(u:     FloatFieldIJ,
+    #                     v:     FloatFieldIJ,
+    #                     h:     FloatFieldIJ,
+    #                     b:     FloatFieldIJ,
+    #                     u_new: FloatFieldIJ,
+    #                     v_new: FloatFieldIJ,
+    #                     h_new: FloatFieldIJ,
+    #                     dtdx:  F_TYPE,
+    #                     dtdy:  F_TYPE,
+    #                     g:     F_TYPE):
 
-        with computation(FORWARD), interval(...):
-            u_new = ((u[1,0] + u[-1,0] + u[0,1] + u[0,-1]) / 4.0)                    \
-                            - 0.5 * dtdx * ((u[1,0]**2) / 2.0 - (u[-1,0]**2) / 2.0)  \
-                            - 0.5 * dtdy * (v[0,0]) * (u[0,1] - u[0,-1])             \
-                            - 0.5 * g * dtdx * (h[1,0] - h[-1,0])
-            v_new = ((v[1,0] + v[-1,0] + v[0,1] + v[0,-1]) / 4.0)                    \
-                            - 0.5 * dtdy * ((v[0,1]**2) / 2.0 - (v[0,1]**2) / 2.0)   \
-                            - 0.5 * dtdx * (u[0,0]) * (v[1,0] - v[-1,0])             \
-                            - 0.5 * g * dtdy * (h[0,1] - h[0,-1])
-            h_new = ((h[1,0] + h[-1,0] + h[0,1] + h[0,-1]) / 4.0)                                \
-                            - 0.5 * dtdx * (u[0,0]) * ((h[1,0] - b[1,0]) - (h[-1,0] - b[-1,0]))  \
-                            - 0.5 * dtdy * (v[0,0]) * ((h[0,1] - b[0,1]) - (h[0,-1] - b[0,-1]))  \
-                            - 0.5 * dtdx * (h[0,0] - b[0,0]) * (u[1,0] - u[-1,0])                \
-                            - 0.5 * dtdy * (h[0,0] - b[0,0]) * (v[0,1] - v[0,-1])
+    #     with computation(FORWARD), interval(...):
+    #         u_new = ((u[1,0] + u[-1,0] + u[0,1] + u[0,-1]) / 4.0)                    \
+    #                         - 0.5 * dtdx * ((u[1,0]**2) / 2.0 - (u[-1,0]**2) / 2.0)  \
+    #                         - 0.5 * dtdy * (v[0,0]) * (u[0,1] - u[0,-1])             \
+    #                         - 0.5 * g * dtdx * (h[1,0] - h[-1,0])
+    #         v_new = ((v[1,0] + v[-1,0] + v[0,1] + v[0,-1]) / 4.0)                    \
+    #                         - 0.5 * dtdy * ((v[0,1]**2) / 2.0 - (v[0,1]**2) / 2.0)   \
+    #                         - 0.5 * dtdx * (u[0,0]) * (v[1,0] - v[-1,0])             \
+    #                         - 0.5 * g * dtdy * (h[0,1] - h[0,-1])
+    #         h_new = ((h[1,0] + h[-1,0] + h[0,1] + h[0,-1]) / 4.0)                                \
+    #                         - 0.5 * dtdx * (u[0,0]) * ((h[1,0] - b[1,0]) - (h[-1,0] - b[-1,0]))  \
+    #                         - 0.5 * dtdy * (v[0,0]) * ((h[0,1] - b[0,1]) - (h[0,-1] - b[0,-1]))  \
+    #                         - 0.5 * dtdx * (h[0,0] - b[0,0]) * (u[1,0] - u[-1,0])                \
+    #                         - 0.5 * dtdy * (h[0,0] - b[0,0]) * (v[0,1] - v[0,-1])
 
-    # Get model state one step in the future for the domain boundaries
-    @gtscript.stencil(backend=backend)
-    def update_boundaries(north :  I_TYPE,
-                          south :  I_TYPE,
-                          east  :  I_TYPE,
-                          west  :  I_TYPE,
-                          u     :  FloatFieldIJ,
-                          v     :  FloatFieldIJ,
-                          h     :  FloatFieldIJ,
-                          u_new :  FloatFieldIJ,
-                          v_new :  FloatFieldIJ,
-                          h_new :  FloatFieldIJ):
+    # # Get model state one step in the future for the domain boundaries
+    # @gtscript.stencil(backend=backend)
+    # def update_boundaries(north :  I_TYPE,
+    #                       south :  I_TYPE,
+    #                       east  :  I_TYPE,
+    #                       west  :  I_TYPE,
+    #                       u     :  FloatFieldIJ,
+    #                       v     :  FloatFieldIJ,
+    #                       h     :  FloatFieldIJ,
+    #                       u_new :  FloatFieldIJ,
+    #                       v_new :  FloatFieldIJ,
+    #                       h_new :  FloatFieldIJ):
 
-        with computation(FORWARD), interval(...):
-            # Update southern boundary
-            with horizontal(region[:, J[0]]):
-                if (south == -1): 
-                    h_new =  h[0,1]
-                    u_new =  u[0,1]
-                    v_new = -v[0,1]
+    #     with computation(FORWARD), interval(...):
+    #         # Update southern boundary
+    #         with horizontal(region[:, J[0]]):
+    #             if (south == -1): 
+    #                 h_new =  h[0,1]
+    #                 u_new =  u[0,1]
+    #                 v_new = -v[0,1]
 
-            # Update northern boundary
-            with horizontal(region[:, J[-1]]):
-                if (north == -1):
-                    h_new =  h[0,-1] 
-                    u_new =  u[0,-1] 
-                    v_new = -v[0,-1] 
+    #         # Update northern boundary
+    #         with horizontal(region[:, J[-1]]):
+    #             if (north == -1):
+    #                 h_new =  h[0,-1] 
+    #                 u_new =  u[0,-1] 
+    #                 v_new = -v[0,-1] 
 
-            # Update western boundary
-            with horizontal(region[I[0], :]):
-                if (west == -1):
-                    h_new =  h[1,0]
-                    u_new = -u[1,0]
-                    v_new =  v[1,0]
+    #         # Update western boundary
+    #         with horizontal(region[I[0], :]):
+    #             if (west == -1):
+    #                 h_new =  h[1,0]
+    #                 u_new = -u[1,0]
+    #                 v_new =  v[1,0]
 
-            # Update eastern boundary
-            with horizontal(region[I[-1], :]):
-                if (east == -1):
-                    h_new =  h[-1,0]
-                    u_new = -u[-1,0]
-                    v_new =  v[-1,0]
+    #         # Update eastern boundary
+    #         with horizontal(region[I[-1], :]):
+    #             if (east == -1):
+    #                 h_new =  h[-1,0]
+    #                 u_new = -u[-1,0]
+    #                 v_new =  v[-1,0]
 

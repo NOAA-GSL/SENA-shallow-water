@@ -4,6 +4,10 @@ import numpy as np
 
 class ShallowWaterModelConfig:
 
+    backend : str = "numpy" 
+    F_TYPE : np.dtype = np.float64
+    I_TYPE : np.dtype = np.int32
+
     def __init__(self, yamlpath=None, dt=None, u0=None, v0=None, b0=None, h0=None):
 
 
@@ -24,7 +28,7 @@ class ShallowWaterModelConfig:
             self.b0 = param['model']['b0']
             self.h0 = param['model']['h0']
 
-            self.backend = param['gt4py_vars']['backend']
+            self.backend = param['gt4py']['backend']
 
         else: 
             # Set default values
@@ -33,7 +37,6 @@ class ShallowWaterModelConfig:
             self.v0 = v0 if v0 is not None else np.float64(0.0)
             self.b0 = b0 if b0 is not None else np.float64(0.0)
             self.h0 = h0 if h0 is not None else np.float64(5030.0)
-            self.backend = "numpy"
 
 
     def __str__(self):

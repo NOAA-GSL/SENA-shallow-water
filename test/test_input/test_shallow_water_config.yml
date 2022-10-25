@@ -18,5 +18,5 @@ runtime:
  output_interval_steps: 5
  io_format: "NETCDF"
 
-gt4py_vars:
- backend: "numpy"
+gt4py:
+  backend: "numpy"
