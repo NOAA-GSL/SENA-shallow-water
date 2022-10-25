@@ -18,31 +18,15 @@ def run_shallow_water(config_file: str, filename=None) -> ShallowWaterModel:
 
     comm = MPI.COMM_WORLD 
 
-    _rank = comm.Get_rank()
-
-
-    # Read the configuration settings from config file
+      # Read the configuration settings from config file
     with open(config_file, mode="r") as f: 
         config = yaml.safe_load(f)
 
-    # Broadcast the runtime configuration settings 
-    # comm.Bcast(np.full(1, config['runtime']['start_step']))
-    # comm.Bcast(np.full(1, config['runtime']['run_steps']))
-    # comm.Bcast(np.full(1, config['runtime']['output_interval_steps']))
-    # comm.Bcast(np.full(1, config['runtime']['io_format']))
+    # Set config variables 
+    _start_step = config['runtime']['start_step']
+    _run_steps = config['runtime']['run_steps']
+    _output_interval_steps = config['runtime']['output_interval_steps']
 
-    # # Broadcast the geometry namelist settings
-    # comm.Bcast(np.full(1, config['geometry']['nx']))
-    # comm.Bcast(np.full(1, config['geometry']['ny']))
-    # comm.Bcast(np.full(1, config['geometry']['xmax']))
-    # comm.Bcast(np.full(1, config['geometry']['ymax']))
-
-    # # Broadcast the model namelist settings 
-    # comm.Bcast(np.full(1, config['model']['dt']))
-    # comm.Bcast(np.full(1, config['model']['u0']))
-    # comm.Bcast(np.full(1, config['model']['v0']))
-    # comm.Bcast(np.full(1, config['model']['b0']))
-    # comm.Bcast(np.full(1, config['model']['h0']))
 
     # Create a shallow water geometry configuration from yaml configuration
     geometry_config = ShallowWaterGeometryConfig(yamlpath=config_file)
@@ -51,19 +35,19 @@ def run_shallow_water(config_file: str, filename=None) -> ShallowWaterModel:
     geometry = ShallowWaterGeometry(geometry=geometry_config, mpi_comm=comm)
 
     # Create a shallow water model configuration from yaml configuration
-    model_config = ShallowWaterModelConfig(filename)
+    model_config = ShallowWaterModelConfig(yamlpath=config_file)
 
-    if (config['runtime']['start_step'] != 0 or filename is not None):
+    if (_start_step != 0 or filename is not None):
 
         state = ShallowWaterState(geometry=geometry, clock=0.0)
 
         state.read_NetCDF(filename)
 
     else:
-
+        # Create a state with a tsunami pulse in it to initialize field h
         _h = gt_storage.zeros(config['gt4py_vars']['backend'], default_origin=(1,1), shape=(geometry.npx, geometry.npy), dtype=np.float64)
-        xmid = geometry.xmax /2.0
-        ymid = geometry.ymax /2.0
+        xmid = geometry.xmax / 2.0
+        ymid = geometry.ymax / 2.0
         sigma = np.floor(geometry.xmax / 20.0)
         for i in range(geometry.xps, geometry.xpe + 1):
             for j in range(geometry.yps, geometry.ype + 1):
@@ -76,15 +60,18 @@ def run_shallow_water(config_file: str, filename=None) -> ShallowWaterModel:
     model = ShallowWaterModel(model_config, geometry)
 
     # Write out the initial state
-    state.write_NetCDF(f"swout_{config['runtime']['start_step']}.nc")
-
-    # TODO Write out state if needed
+    if _output_interval_steps <= _run_steps: 
+        state.write_NetCDF(f"swout_{_start_step}.nc")
 
     # Run the model
-    model.adv_nsteps(state, config['runtime']['run_steps'])
+    for t in range(_start_step, _run_steps, _output_interval_steps):
+       
+        # Advance the model to next output interval
+        model.adv_nsteps(state, min(_output_interval_steps, _run_steps - t))
 
-    # Write out the final state
-    state.write_NetCDF(f"swout_{config['runtime']['run_steps']}.nc")
+        # Write out model state if needed 
+        if _output_interval_steps <= _run_steps:
+            state.write_NetCDF(f"swout_{int(state.clock / model.dt)}.nc")
 
 
 def main():

@@ -1,4 +1,3 @@
-from typing_extensions import Self
 from mpi4py import MPI
 import numpy as np
 import gt4py.gtscript as gtscript
@@ -8,24 +7,20 @@ from shallow_water_model_config import ShallowWaterModelConfig
 from shallow_water_geometry import ShallowWaterGeometry
 from shallow_water_state import ShallowWaterState
 
-backend = "numpy"
-F_TYPE = np.float64
-I_TYPE = np.int32
-# Use a 2D Field for the GT4Py Stencils
-FloatFieldIJ = gtscript.Field[gtscript.IJ, np.float64]
 
 class ShallowWaterModel:
+
+    backend = "numpy"
+    F_TYPE = np.float64
+    I_TYPE = np.int32
+    # Use a 2D Field for the GT4Py Stencils
+    FloatFieldIJ = gtscript.Field[gtscript.IJ, np.float64]
 
     def __init__(self, config : ShallowWaterModelConfig, geometry : ShallowWaterGeometry):
      
         self.config = config 
         self.geometry = geometry
         self.dt = config.dt
-
-        self.backend = config.backend 
-        self.dtype = config.dtype
-        self.F_TYPE = config.F_TYPE
-        self.I_TYPE = config.I_TYPE
 
         # Initialize b (currently unused)
         self.b = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
@@ -61,16 +56,15 @@ class ShallowWaterModel:
         _yps = self.geometry.yps
         _ype = self.geometry.ype
 
-        # Set up the halo, origin, and domain
-        _nx = self.geometry.xte - self.geometry.xts + 1
-        _ny = self.geometry.yte - self.geometry.yts + 1
-        _nhalo = self.geometry.xts - self.geometry.xps
-        _origin = (_nhalo, _nhalo)
-        _domain = (_nx, _ny, 1)
+        # Get local interior points 
+        _xts = self.geometry.xts
+        _xte = self.geometry.xte
+        _yts = self.geometry.yts
+        _yte = self.geometry.yte
 
-        _u_new = gt_storage.zeros(shape=(_xpe - _xps + 1, _ype - _yps + 1), backend=self.backend, default_origin=(0,0,0), dtype=self.F_TYPE )
-        _v_new = gt_storage.zeros(shape=(_xpe - _xps + 1, _ype - _yps + 1), backend=self.backend, default_origin=(0,0,0), dtype=self.F_TYPE )
-        _h_new = gt_storage.zeros(shape=(_xpe - _xps + 1, _ype - _yps + 1), backend=self.backend, default_origin=(0,0,0), dtype=self.F_TYPE )
+        _u_new = gt_storage.zeros(shape=(_xme - _xms + 1, _yme - _yms + 1), backend=self.backend, default_origin=(1,1), dtype=self.F_TYPE )
+        _v_new = gt_storage.zeros(shape=(_xme - _xms + 1, _yme - _yms + 1), backend=self.backend, default_origin=(1,1), dtype=self.F_TYPE )
+        _h_new = gt_storage.zeros(shape=(_xme - _xms + 1, _yme - _yms + 1), backend=self.backend, default_origin=(1,1), dtype=self.F_TYPE )
 
         _b_gt = gt_storage.from_array(self.b, state.backend, default_origin=(0,0,0))
 
@@ -91,22 +85,22 @@ class ShallowWaterModel:
                                    u_new  = _u_new,
                                    v_new  = _v_new,
                                    h_new  = _h_new,
-                                   origin = (0,0,0),
-                                   domain = (self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1, 1))
+                                   origin = (0, 0),
+                                   domain = (_xme - _xms + 1, _yme - _yms + 1, 1))
 
             # Update the domain interior
             self.update_interior(u      = state.u,
-                            v      = state.v,
-                            h      = state.h,
-                            b      = self.b,
-                            u_new  = _u_new,
-                            v_new  = _v_new,
-                            h_new  = _h_new,
-                            dtdx   = _dtdx,
-                            dtdy   = _dtdy,
-                            g      = _g,
-                            origin = _origin,
-                            domain = _domain)
+                                 v      = state.v,
+                                 h      = state.h,
+                                 b      = self.b,
+                                 u_new  = _u_new,
+                                 v_new  = _v_new,
+                                 h_new  = _h_new,
+                                 dtdx   = _dtdx,
+                                 dtdy   = _dtdy,
+                                 g      = _g,
+                                 origin = (1, 1),
+                                 domain = (_xte - _xts + 1, _yte - _yts + 1, 1))
 
             # Update state with new state
             for i in range(_xps - _xms, _xpe - _xms + 1):
@@ -118,10 +112,6 @@ class ShallowWaterModel:
             # Update the model clock and step counter
             state.advance_clock(self.dt)
 
-        # Update state with new state after advancing the model
-        state.u[:,:] = state.u[:,:]
-        state.v[:,:] = state.v[:,:]
-        state.h[:,:] = state.h[:,:]
 
     # Get model state one step in the future for the domain interior
     @gtscript.stencil(backend=backend)

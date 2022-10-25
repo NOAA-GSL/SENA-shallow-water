@@ -24,10 +24,7 @@ class ShallowWaterModelConfig:
             self.b0 = param['model']['b0']
             self.h0 = param['model']['h0']
 
-            self.backend = param['g4tpy_vars']['backend']
-            self.dtype   = param['gt4py_vars']['dtype']  
-            self.F_TYPE  = param['gt4py_vars']['F_TYPE'] 
-            self.I_TYPE  = param['gt4py_vars']['I_TYPE'] 
+            self.backend = param['gt4py_vars']['backend']
 
         else: 
             # Set default values
@@ -37,9 +34,7 @@ class ShallowWaterModelConfig:
             self.b0 = b0 if b0 is not None else np.float64(0.0)
             self.h0 = h0 if h0 is not None else np.float64(5030.0)
             self.backend = "numpy"
-            self.dtype   = np.float64
-            self.F_TYPE  = np.float64
-            self.I_TYPE  = int
+
 
     def __str__(self):
         return (
