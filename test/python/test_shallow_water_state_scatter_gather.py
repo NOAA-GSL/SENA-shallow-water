@@ -48,3 +48,4 @@ for n in range(comm.Get_size()):
         print(np.rot90(test_shallow_water_state.u))
     comm.Barrier()
 
+comm = MPI.Finalize()

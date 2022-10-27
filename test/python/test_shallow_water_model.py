@@ -32,3 +32,5 @@ model = ShallowWaterModel(config=model_config, geometry=geom)
 print(model.__dict__)
 
 model.adv_nsteps_model(state=state, nsteps=np.int32(1))
+
+comm = MPI.Finalize()

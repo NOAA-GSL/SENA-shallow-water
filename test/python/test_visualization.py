@@ -78,3 +78,5 @@ anim = animation.FuncAnimation(fig, animate, interval=125, frames=500)
 anim.save('../test_output/test.gif')
 fig.savefig('../test_output/test500.png')
 # s.write_NetCDF("../test_output/state_500.nc")
+
+comm = MPI.Finalize()

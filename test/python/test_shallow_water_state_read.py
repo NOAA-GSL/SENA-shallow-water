@@ -26,3 +26,4 @@ filepath = "../test_input/test_shallow_water_reader.nc"
 
 test_shallow_water_state.read_NetCDF(filepath)
 
+comm = MPI.Finalize()

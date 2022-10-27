@@ -21,3 +21,4 @@ print(getattr(geom, "east"))
 
 print(type(geom))
 
+comm = MPI.Finalize()
