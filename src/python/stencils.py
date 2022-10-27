@@ -97,11 +97,40 @@ def update_boundaries(north :  I_TYPE,
                 u_new = -u[-1,0]
                 v_new =  v[-1,0]
 
-def update_interior_tl():
-    pass
+def update_interior_tl(traj_u:     FloatFieldIJ,
+                       traj_v:     FloatFieldIJ,
+                       traj_h:     FloatFieldIJ,
+                       u:          FloatFieldIJ,
+                       v:          FloatFieldIJ,
+                       h:          FloatFieldIJ,
+                       b:          FloatFieldIJ,
+                       u_new:      FloatFieldIJ,
+                       v_new:      FloatFieldIJ,
+                       h_new:      FloatFieldIJ,
+                       dtdx:       F_TYPE,
+                       dtdy:       F_TYPE,
+                       g:          F_TYPE):
+        
+        # Employ lax
+        with computation(FORWARD), interval(...):
+            u_new = (u[1,0] + u[-1,0] + u[0,1] + u[0,-1]) / 4.0                                                         \
+                            - 0.5 * dtdx * (2 * traj_u[1,0] * u[1,0] / 2.0                                              \
+                            - 2.0 * traj_u[-1,0] * u[-1, 0] / 2.0)                                                      \
+                            - 0.5 * dtdy * (v[0,0] * (traj_u[0,1] - traj_u[0,-1]) + traj_v[0,0] * (u[0,1] - u[0,-1]))   \
+                            - 0.5 * g * dtdx * (h[1,0] - h[-1,0])
+            v_new = (v[1,0] + v[-1,0] + v[0,1] + v[0,-1]) / 4.0                                                         \
+                            - 0.5 * dtdx * (u[0,0] * (traj_v[1,0] - traj_v[-1,0]) + traj_u[0,0] * (v[1,0] - v[-1,0]))   \
+                            - 0.5 * g * dtdy * (h[0,1] - h[0,-1])
+            h_new = (h[1,0] + h[-1,0] + h[0,1] + h[0,-1]) / 4.0                                                         \
+                            - 0.5 * dtdx * (u[0,0] * (traj_h[1,0] - b[1,0] - (traj_h[-1,0]                              \
+                            - b[-1,0])) + traj_u[0,0] * (h[1,0] - h[-1,0]))                                             \
+                            - 0.5 * dtdy * (v[0,0] * (traj_h[0,1] - b[0,1] - (traj_h[0,-1]                              \
+                            - b[0,-1])) + traj_v[0,0] * (h[0,1] - h[0,-1]))                                             \
+                            - 0.5 * dtdx * (h[0,0] * (traj_u[1,0] - traj_u[-1,0]) + (traj_h[0,0]                       \
+                            - b[0,0]) * (u[1,0] - u[-1,0]))                                                             \
+                            - 0.5 * dtdy * (h[0,0] * (traj_v[0,1] - traj_v[0,-1]) + (traj_h[0,0]                       \
+                            - b[0,0]) * (v[0,1] - v[0,-1]))
 
-def update_boundaries_tl():
-    pass
 
 def update_interior_adj():
     pass
@@ -114,8 +143,7 @@ class StencilFunctions:
     def __init__(self, config: StencilConfig):
         self.update_interior = config.compile_to_stencil(update_interior)
         self.update_boundaries = config.compile_to_stencil(update_boundaries)
-        # self.update_interior_tl = config.compile_to_stencil(update_interior_tl)        
-        # self.update_boundaries_tl = config.compile_to_stencil(update_boundaries_tl)
+        self.update_interior_tl = config.compile_to_stencil(update_interior_tl)        
         # self.update_interior_adj = config.compile_to_stencil(update_interior_adj)
         # self.update_boundaries_adj = config.compile_to_stencil(update_boundaries_adj)        
 
