@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 class ShallowWaterModelConfig:
 
     def __init__(self, dt: float, u0: float, v0: float, b0: float, h0: float):
@@ -43,14 +41,4 @@ class ShallowWaterModelConfig:
         model = config['model']
         swmc = cls(model['dt'], model['u0'], model['v0'], model['b0'], model['h0'])
         return swmc
-  
-#swmc1 = ShallowWaterModelConfig(1.0, 2.0, 3.0, 4.0, 5.0)
-#print(swmc1)
-#
-#swmc2 = ShallowWaterModelConfig.from_YAML_filename('foo.yml')
-#print(swmc2)
-#
-#fp = open('foo.yml', 'r')
-#swmc3 = ShallowWaterModelConfig.from_YAML_file_object(fp)
-#print(swmc3)
 
