@@ -10,11 +10,12 @@ program Test_Shallow_Water_Model_Config_NLUnit
   type(shallow_water_model_config_type) :: config
 
   ! Config parameters
+  real(r8kind) :: dt
   real(r8kind) :: u0
   real(r8kind) :: v0
   real(r8kind) :: b0
   real(r8kind) :: h0
-  namelist /model_parm/ u0, v0, b0, h0
+  namelist /model_parm/ dt, u0, v0, b0, h0
 
   ! Namelist file descriptor
   integer :: nl_unit
@@ -32,6 +33,9 @@ program Test_Shallow_Water_Model_Config_NLUnit
 
   ! Create a shallow water model configuration from unit number of open namelist file
   config = shallow_water_model_config_type(nl_unit)
+
+  ! Check dt
+  call check_real_scalar(config%get_dt(), "dt", dt, 0.0_r8kind, errors)
 
   ! Check u0
   call check_real_scalar(config%get_u0(), "u0", u0, 0.0_r8kind, errors)

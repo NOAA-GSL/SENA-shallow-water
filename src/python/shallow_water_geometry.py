@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from shallow_water_geometry_config import ShallowWaterGeometryConfig 
 from mpi4py import MPI
 
@@ -100,11 +98,3 @@ class ShallowWaterGeometry:
         else:
             self.xte = self.xpe
             self.xme = self.xpe + 1
-
-#comm = MPI.COMM_WORLD
-#gc = ShallowWaterGeometryConfig.from_YAML_filename('foo.yml')
-#g = ShallowWaterGeometry(gc, comm)
-#
-#if (g.rank == 0):
-#    print(f'Number of ranks = {g.nranks}')
-#print(f'My rank = {g.rank}')

@@ -5,6 +5,7 @@ sys.path.append("../../src/python")
 
 from shallow_water_geometry_config import ShallowWaterGeometryConfig
 
+@pytest.mark.mpi_skip
 def test_shallow_water_geometry_config_arglist():
     nx = 100
     ny = 200
@@ -18,6 +19,7 @@ def test_shallow_water_geometry_config_arglist():
     assert config.xmax == xmax
     assert config.ymax == ymax
 
+@pytest.mark.mpi_skip
 def test_shallow_water_geometry_config_yaml_file():
     import yaml
     filename = '../test_input/test_shallow_water_config.yml'
@@ -35,6 +37,7 @@ def test_shallow_water_geometry_config_yaml_file():
     assert config.xmax == yamlGeometry['xmax']
     assert config.ymax == yamlGeometry['ymax']
 
+@pytest.mark.mpi_skip
 def test_shallow_water_geometry_config_yaml_fp():
     import yaml
     filename = '../test_input/test_shallow_water_config.yml'
