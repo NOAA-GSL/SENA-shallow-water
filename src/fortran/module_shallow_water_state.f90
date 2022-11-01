@@ -855,7 +855,7 @@ contains
     if (myrank == 0) then
 
       ! Open new file, overwriting previous contents
-      call nc_check(nf90_create(trim(filename), NF90_CLOBBER, ncFileID))
+      call nc_check(nf90_create(trim(filename), IOR(NF90_CLOBBER,NF90_NETCDF4), ncFileID))
       call nc_check(nf90_Inquire(ncFileID, nDimensions, nVariables, nAttributes, unlimitedDimID))
 
       ! Write Global Attributes

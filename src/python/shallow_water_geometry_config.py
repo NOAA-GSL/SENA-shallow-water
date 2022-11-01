@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 class ShallowWaterGeometryConfig:
 
     def __init__(self, nx: int, ny: int, xmax: int, ymax: int):
@@ -41,14 +39,4 @@ class ShallowWaterGeometryConfig:
         geometry = config['geometry']
         swgc = cls(geometry['nx'], geometry['ny'], geometry['xmax'], geometry['ymax'])
         return swgc
-  
-#swgc1 = ShallowWaterGeometryConfig(10,20,100,200)
-#print(swgc1)
-#
-#swgc2 = ShallowWaterGeometryConfig.from_YAML_filename('foo.yml')
-#print(swgc2)
-#
-#fp = open('foo.yml', 'r')
-#swgc3 = ShallowWaterGeometryConfig.from_YAML_file_object(fp)
-#print(swgc3)
 
