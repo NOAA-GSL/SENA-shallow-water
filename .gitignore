@@ -4,3 +4,11 @@
 
 # Ignore NetCDF files
 *.nc
+
+# Ignore Python/GT4Py cache
+.gt_cache
+__pycache__
+
+# Ignore the build and exe dirs
+exe
+build
