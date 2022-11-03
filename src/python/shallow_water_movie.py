@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from mpi4py import MPI
-from matplotlib import pyplot as plt, animation
+from matplotlib import pyplot as plt, animation, colors
 import numpy as np
 
 from shallow_water_geometry_config import ShallowWaterGeometryConfig
@@ -9,6 +9,29 @@ from shallow_water_geometry import ShallowWaterGeometry
 from shallow_water_model_config import ShallowWaterModelConfig
 from shallow_water_model import ShallowWaterModel
 from shallow_water_state import ShallowWaterState
+
+def animate(n):
+    m.adv_nsteps(s, 1)
+    pc.set_array(s.h.data)
+
+class ColormapNormalize(colors.Normalize):
+    def __init__(self, vmin=None, vmax=None, v1=None, v2=None, clip=False):
+        self.v1 = v1
+        self.v2 = v2
+        super().__init__(vmin, vmax, clip)
+
+    def __call__(self, value, clip=None):
+        # I'm ignoring masked values and all kinds of edge cases to make a
+        # simple example...
+        # Note also that we must extrapolate beyond vmin/vmax
+        x, y = [self.vmin, self.v1, self.v2, self.vmax], [0, 0.05, 0.95, 1.]
+        return np.ma.masked_array(np.interp(value, x, y,
+                                            left=-np.inf, right=np.inf))
+
+    def inverse(self, value):
+        y, x = [self.vmin, self.v1, self.v2, self.vmax], [0, 0.1, 0.9, 1]
+
+        return np.interp(value, x, y, left=-np.inf, right=np.inf)
 
 comm = MPI.COMM_WORLD
 
@@ -54,13 +77,13 @@ else:
             h[i - g.xps,j - g.yps] = 5000.0 + np.exp(-dsqr / sigma**2) * (mc.h0 - 5000.0)
     s = ShallowWaterState(g, h=h)
 
-# Write out the initial state if needed
-if (runtime['output_interval_steps'] <= runtime['run_steps']):
-    s.write(f"swout_{round(s.clock / m.dt):07d}.nc")
+## Plot animation
+X, Y = np.meshgrid(np.linspace(0, g.xmax, g.npx), np.linspace(0, g.ymax, g.npy))
+fig, axs = plt.subplots()
+norm = ColormapNormalize(vmin=4990, vmax=5030, v1=4995, v2=5005)
+pc = axs.pcolormesh(X, Y, s.h.data, cmap='nipy_spectral', norm=norm)
+cb = fig.colorbar(pc, ax=axs, extend='both')
+cb.set_ticks([4990, 4995, 4996, 4997, 4998, 4999, 5000, 5001, 5002, 5003, 5004, 5005, 5030])
+anim = animation.FuncAnimation(fig, animate, interval=125, frames=runtime['run_steps'])
+anim.save('test.gif')
 
-# Run the model
-for t in range(0, runtime['run_steps'], runtime['output_interval_steps']):
-    m.adv_nsteps(s, min(runtime['output_interval_steps'], runtime['run_steps'] - t))
-    if (runtime['output_interval_steps']):
-        s.write(f"swout_{round(s.clock / m.dt):07d}.nc")
-    print(f"t = {t}")

@@ -3,9 +3,10 @@ from shallow_water_geometry import ShallowWaterGeometry
 from shallow_water_state import ShallowWaterState
 import gt4py.gtscript as gtscript
 import gt4py.storage as gt_storage
+from numpy import float64
 
 # Define float types
-F_TYPE = float
+F_TYPE = float64
 FloatFieldIJ = gtscript.Field[gtscript.IJ, F_TYPE]
 
 # Define constants
