@@ -12,3 +12,7 @@ model: {
   b0: 4.0,
   h0: 5.0
 }
+
+gt4py: {
+  backend: 'numpy'
+}

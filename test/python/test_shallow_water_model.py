@@ -9,29 +9,9 @@ from shallow_water_geometry_config import ShallowWaterGeometryConfig
 from shallow_water_geometry import ShallowWaterGeometry
 from shallow_water_state import ShallowWaterState
 from shallow_water_model_config import ShallowWaterModelConfig
+from shallow_water_gt4py_config import ShallowWaterGT4PyConfig
 from shallow_water_model import ShallowWaterModel
 from mpi4py import MPI
-
-#@pytest.fixture
-#def input_config():
-#    comm = MPI.COMM_WORLD
-#    nranks = comm.Get_size()
-#    myrank = comm.Get_rank()
-#    nx = 101
-#    ny = 201
-#    xmax = 100000.0
-#    ymax = 100000.0
-#    u0 = 0.0
-#    v0 = 0.0
-#    b0 = 0.0
-#    h0 = 5030.0
-#
-#    gc = ShallowWaterGeometryConfig(nx, ny, xmax, ymax)
-#    g = ShallowWaterGeometry(gc, comm)
-#
-#    mc = ShallowWaterModelConfig(dt, u0, v0, b0, h0)
-#
-#    return { "geometry" : geometry, "model_config" : mc }
 
 @pytest.mark.mpi(min_size=1)
 def test_shallow_water_model_init():
@@ -53,16 +33,16 @@ def test_shallow_water_model_init():
     gc = ShallowWaterGeometryConfig(nx, ny, xmax, ymax)
     g = ShallowWaterGeometry(gc, comm)
     mc = ShallowWaterModelConfig(dt, u0, v0, b0, h0)
+    gtc = ShallowWaterGT4PyConfig('numpy')
 
-    model = ShallowWaterModel(mc, g)
-
-    model_config = model.config
+    model = ShallowWaterModel(mc, gtc, g)
 
     geometry = model.geometry
 
     assert geometry.dx == dx
     assert geometry.dy == dy
     assert model.dt == dt
+    assert model.backend == 'numpy'
 
 @pytest.mark.mpi(min_size=1)
 def test_shallow_water_model_adv_nsteps():
@@ -94,14 +74,15 @@ def test_shallow_water_model_adv_nsteps():
     yme = g.yme
 
     mc = ShallowWaterModelConfig(dt, u0, v0, b0, h0)
+    gtc = ShallowWaterGT4PyConfig('numpy')
 
-    model = ShallowWaterModel(mc, g)
+    model = ShallowWaterModel(mc, gtc, g)
 
     u = np.zeros((npx, npy))
     v = np.zeros((npx, npy))
     h = np.zeros((npx, npy))
 
-    state = ShallowWaterState(g, u=u, v=v, h=h, clock = step * model.dt)
+    state = ShallowWaterState(g, gtc, u=u, v=v, h=h, clock = step * model.dt)
 
     model.adv_nsteps(state, 1)
 
@@ -115,7 +96,7 @@ def test_shallow_water_model_adv_nsteps():
     assert_almost_equal(state.clock, step * model.dt + model.dt + model.dt + model.dt)
 
     h[:,:] = h[:,:] + 10.0
-    state = ShallowWaterState(g, u=u, v=v, h=h)
+    state = ShallowWaterState(g, gtc, u=u, v=v, h=h)
 
     model.adv_nsteps(state, 1)
 
@@ -144,6 +125,7 @@ def test_shallow_water_model_regression():
 
     gc = ShallowWaterGeometryConfig(nx, ny, xmax, ymax)
     g = ShallowWaterGeometry(gc, comm)
+    gtc = ShallowWaterGT4PyConfig('numpy')
 
     h = np.empty((g.npx, g.npy), dtype=float)
     dx = g.dx
@@ -155,11 +137,11 @@ def test_shallow_water_model_regression():
         for j in range(g.yps, g.ype + 1):
             dsqr = ((i-1) * g.dx - xmid)**2 + ((j-1) * g.dy - ymid)**2
             h[i - g.xps,j - g.yps] = 5000.0 + np.exp(-dsqr / sigma**2) * (h0 - 5000.0)
-    s = ShallowWaterState(g, h=h)
+    s = ShallowWaterState(g, gtc, h=h)
 
     mc = ShallowWaterModelConfig(dt, u0, v0, b0, h0)
 
-    model = ShallowWaterModel(mc, g)
+    model = ShallowWaterModel(mc, gtc, g)
 
     model.adv_nsteps(s, 100)
 

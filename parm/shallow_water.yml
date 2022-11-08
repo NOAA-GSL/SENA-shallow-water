@@ -19,3 +19,7 @@ runtime: {
  output_interval_steps: 3,
  io_format: 'NETCDF'
 }
+
+gt4py: {
+ backend: 'numpy'
+}

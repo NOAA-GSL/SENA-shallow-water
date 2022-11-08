@@ -7,6 +7,7 @@ import numpy as np
 from shallow_water_geometry_config import ShallowWaterGeometryConfig
 from shallow_water_geometry import ShallowWaterGeometry
 from shallow_water_model_config import ShallowWaterModelConfig
+from shallow_water_gt4py_config import ShallowWaterGT4PyConfig
 from shallow_water_model import ShallowWaterModel
 from shallow_water_state import ShallowWaterState
 
@@ -20,7 +21,8 @@ g = ShallowWaterGeometry(gc, comm)
 
 # Create the model
 mc = ShallowWaterModelConfig.from_YAML_filename(config_file)
-m = ShallowWaterModel(mc, g)
+gtc = ShallowWaterGT4PyConfig.from_YAML_filename(config_file)
+m = ShallowWaterModel(mc, gtc, g)
 
 # Get the runtime config
 import yaml
@@ -35,7 +37,7 @@ runtime = config['runtime']
 if (runtime['start_step'] != 0):
 
     # Initialize a default state
-    s = ShallowWaterState(g)
+    s = ShallowWaterState(g, gtc)
 
     # Read restart file into state
     s.read(f"swout_{runtime['start_step']:07d}.nc")
@@ -52,7 +54,7 @@ else:
         for j in range(g.yps, g.ype + 1):
             dsqr = ((i-1) * g.dx - xmid)**2 + ((j-1) * g.dy - ymid)**2
             h[i - g.xps,j - g.yps] = 5000.0 + np.exp(-dsqr / sigma**2) * (mc.h0 - 5000.0)
-    s = ShallowWaterState(g, h=h)
+    s = ShallowWaterState(g, gtc, h=h)
 
 # Write out the initial state if needed
 if (runtime['output_interval_steps'] <= runtime['run_steps']):

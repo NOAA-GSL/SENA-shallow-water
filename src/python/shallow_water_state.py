@@ -8,7 +8,7 @@ backend="numpy"
 
 class ShallowWaterState:
 
-    def __init__(self, geometry, u=None, v=None, h=None, clock=0):
+    def __init__(self, geometry, config, u=None, v=None, h=None, clock=0):
 
         # Physical constants
         _g  = 9.81
@@ -16,9 +16,12 @@ class ShallowWaterState:
         # Set the geometry associated with this state
         self.geometry = geometry
 
+        # Set the config for use in GT4Py storage creation
+        self.config = config
+
         # Initialize u
         self.u = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                  dtype=np.float64, backend=backend, default_origin=(1,1))
+                                  dtype=np.float64, backend=self.config.backend, default_origin=(1,1))
         if (u) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):
@@ -26,7 +29,7 @@ class ShallowWaterState:
 
         # Initialize v
         self.v = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                  dtype=np.float64, backend=backend, default_origin=(1,1))
+                                  dtype=np.float64, backend=self.config.backend, default_origin=(1,1))
         if (v) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):
@@ -34,7 +37,7 @@ class ShallowWaterState:
 
         # Initialize h
         self.h = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                  dtype=np.float64, backend=backend, default_origin=(1,1))
+                                  dtype=np.float64, backend=self.config.backend, default_origin=(1,1))
         if (h) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):

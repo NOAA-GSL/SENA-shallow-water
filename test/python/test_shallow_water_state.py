@@ -7,6 +7,7 @@ sys.path.append("../../src/python")
 
 from shallow_water_geometry_config import ShallowWaterGeometryConfig 
 from shallow_water_geometry import ShallowWaterGeometry
+from shallow_water_gt4py_config import ShallowWaterGT4PyConfig
 from shallow_water_state import ShallowWaterState
 from mpi4py import MPI
 
@@ -36,16 +37,20 @@ def input_io_geometry():
     geometry = ShallowWaterGeometry(config, comm)
     return geometry
 
+@pytest.fixture
+def input_gt4py_config():
+    gt4py = ShallowWaterGT4PyConfig('numpy')
+    return gt4py
 
 @pytest.mark.mpi(min_size=1)
-def test_shallow_water_state_init_default(input_geometry):
-    state = ShallowWaterState(input_geometry)
+def test_shallow_water_state_init_default(input_geometry, input_gt4py_config):
+    state = ShallowWaterState(input_geometry, input_gt4py_config)
     assert_array_equal(state.u, 0.0)
     assert_array_equal(state.v, 0.0)
     assert_array_equal(state.h, 0.0)
 
 @pytest.mark.mpi(min_size=1)
-def test_shallow_water_state_init_optional(input_geometry):
+def test_shallow_water_state_init_optional(input_geometry, input_gt4py_config):
     npx = input_geometry.npx
     npy = input_geometry.npy
     xps = input_geometry.xps
@@ -59,14 +64,14 @@ def test_shallow_water_state_init_optional(input_geometry):
     u = np.full((npx, npy), 1.0)
     v = np.full((npx, npy), 2.0)
     h = np.full((npx, npy), 3.0)
-    state = ShallowWaterState(input_geometry, u=u, v=v, h=h)
+    state = ShallowWaterState(input_geometry, input_gt4py_config, u=u, v=v, h=h)
 
     assert_array_equal(state.u.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], u)
     assert_array_equal(state.v.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], v)
     assert_array_equal(state.h.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], h)
 
 @pytest.mark.mpi(min_size=1)
-def test_shallow_water_state_halo(input_geometry):
+def test_shallow_water_state_halo(input_geometry, input_gt4py_config):
     myrank = input_geometry.communicator.Get_rank()
     npx = input_geometry.npx
     npy = input_geometry.npy
@@ -86,7 +91,7 @@ def test_shallow_water_state_halo(input_geometry):
     v = np.full((npx, npy), 20.0 * myrank)
     h = np.full((npx, npy), 30.0 * myrank)
 
-    state = ShallowWaterState(input_geometry, u=u, v=v, h=h)
+    state = ShallowWaterState(input_geometry, input_gt4py_config, u=u, v=v, h=h)
 
     state.exchange_halo()
 
@@ -112,7 +117,7 @@ def test_shallow_water_state_halo(input_geometry):
         assert_array_equal(state.h.data[xme-xms, yps-yms:ype-yms+1], 30.0 * east)
 
 @pytest.mark.mpi(min_size=1)
-def test_shallow_water_state_read(input_io_geometry):
+def test_shallow_water_state_read(input_io_geometry, input_gt4py_config):
     npx = input_io_geometry.npx
     npy = input_io_geometry.npy
     xps = input_io_geometry.xps
@@ -128,7 +133,7 @@ def test_shallow_water_state_read(input_io_geometry):
     v = np.full((npx, npy), 6.0)
     h = np.full((npx, npy), 7.0)
 
-    state = ShallowWaterState(input_io_geometry)
+    state = ShallowWaterState(input_io_geometry, input_gt4py_config)
     state.read("../test_input/test_shallow_water_reader.nc")
 
     assert_almost_equal(state.clock, clock, decimal=9)
@@ -137,7 +142,7 @@ def test_shallow_water_state_read(input_io_geometry):
     assert_array_equal(state.h.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], h)
 
 @pytest.mark.mpi(min_size=1)
-def test_shallow_water_state_write(input_io_geometry):
+def test_shallow_water_state_write(input_io_geometry, input_gt4py_config):
     npx = input_io_geometry.npx
     npy = input_io_geometry.npy
     xps = input_io_geometry.xps
@@ -153,10 +158,10 @@ def test_shallow_water_state_write(input_io_geometry):
     v = np.full((npx, npy), 6.0)
     h = np.full((npx, npy), 7.0)
 
-    state = ShallowWaterState(input_io_geometry, u=u, v=v, h=h, clock=clock)
+    state = ShallowWaterState(input_io_geometry, input_gt4py_config, u=u, v=v, h=h, clock=clock)
     state.write("test_shallow_water_writer.nc")
 
-    state_read = ShallowWaterState(input_io_geometry)
+    state_read = ShallowWaterState(input_io_geometry, input_gt4py_config)
     state_read.read("test_shallow_water_writer.nc")
 
     assert_almost_equal(state.clock, state_read.clock, decimal=9)
