@@ -43,11 +43,11 @@ class ShallowWaterModel:
 
         # Create gt4py storages for the new model state
         _u_new = gt_storage.empty(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                   dtype=F_TYPE, backend=self.gt4PyConfig.backend, default_origin=(1, 1))
+                                   dtype=F_TYPE, backend=self.backend, default_origin=(1, 1))
         _v_new = gt_storage.empty(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                   dtype=F_TYPE, backend=self.gt4PyConfig.backend, default_origin=(1, 1))
+                                   dtype=F_TYPE, backend=self.backend, default_origin=(1, 1))
         _h_new = gt_storage.empty(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                   dtype=F_TYPE, backend=self.gt4PyConfig.backend, default_origin=(1, 1))
+                                   dtype=F_TYPE, backend=self.backend, default_origin=(1, 1))
 
         for n in range(nsteps):
             # Exchange halo

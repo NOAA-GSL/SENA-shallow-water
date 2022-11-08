@@ -4,8 +4,6 @@ import numpy as np
 from mpi4py import MPI
 import gt4py.storage as gt_storage
 
-backend="numpy"
-
 class ShallowWaterState:
 
     def __init__(self, geometry, config, u=None, v=None, h=None, clock=0):
@@ -17,11 +15,11 @@ class ShallowWaterState:
         self.geometry = geometry
 
         # Set the config for use in GT4Py storage creation
-        self.config = config
+        self.backend = config.backend
 
         # Initialize u
         self.u = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                  dtype=np.float64, backend=self.config.backend, default_origin=(1,1))
+                                  dtype=np.float64, backend=self.backend, default_origin=(1,1))
         if (u) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):
@@ -29,7 +27,7 @@ class ShallowWaterState:
 
         # Initialize v
         self.v = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                  dtype=np.float64, backend=self.config.backend, default_origin=(1,1))
+                                  dtype=np.float64, backend=self.backend, default_origin=(1,1))
         if (v) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):
@@ -37,7 +35,7 @@ class ShallowWaterState:
 
         # Initialize h
         self.h = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                  dtype=np.float64, backend=self.config.backend, default_origin=(1,1))
+                                  dtype=np.float64, backend=self.backend, default_origin=(1,1))
         if (h) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):
