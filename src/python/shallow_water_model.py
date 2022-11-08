@@ -115,7 +115,7 @@ class ShallowWaterModel:
             state.advance_clock(self.dt)
 
 
-    def adv_nsteps_tl(self, state : ShallowWaterState, trajectory : ShallowWaterState, nsteps: np.int32):
+    def adv_nsteps_tl(self, state : ShallowWaterState, trajectory : ShallowWaterState, nsteps: int):
 
         _dx = self.geometry.dx
         _dy = self.geometry.dy
