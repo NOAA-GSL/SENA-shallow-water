@@ -64,25 +64,25 @@ _yme = geometry.yme
 model_config = ShallowWaterModelConfig(dt=_dt, u0=_u0, v0=_v0, b0=_b0, h0=_h0)
 
 # Allocate space for model states
-_u = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
-_v = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
-_h = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
-_udelta        = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
-_vdelta        = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
-_hdelta        = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
-_mu            = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
-_mv            = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
-_mh            = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
-_m_udelta      = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
-_m_vdelta      = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
-_m_hdelta      = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
-_mprime_udelta = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
-_mprime_vdelta = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
-_mprime_hdelta = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=np.float64)
+# _u = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
+# _v = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
+# _h = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
+_udelta        = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
+_vdelta        = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
+_hdelta        = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
+_mu            = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
+_mv            = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
+_mh            = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
+_m_udelta      = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
+_m_vdelta      = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
+_m_hdelta      = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
+_mprime_udelta = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
+_mprime_vdelta = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
+_mprime_hdelta = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
 
 
 # Create a state with a tsunami pulse in it to initialize field _h
-# _h = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(geometry.npx, geometry.npy), dtype=model_config.F_TYPE)
+_h = gt_storage.zeros(model_config.backend, default_origin=(1,1), shape=(_xme - _xms + 1, _yme - _yms + 1), dtype=model_config.F_TYPE)
 xmid = geometry.xmax / 2.0
 ymid = geometry.ymax / 2.0
 sigma = np.floor(geometry.xmax / 20.0)
@@ -105,129 +105,100 @@ print('Integrating forward model spinup steps: ', _spinup_steps)
 shallow_water.adv_nsteps(state, _spinup_steps)
 
 # Advance the forward model 100 steps and use it to compute a dx
-_u = state.u.data
-_v = state.v.data
-_h = state.h.data
-
-print("_u", _u[2, 2])
-print("_v", _v[2, 2])
-print("_h", _h[2, 2])
+_u = gt_storage.from_array(state.u, backend=model_config.backend, default_origin=(1,1), dtype=model_config.F_TYPE)
+_v = gt_storage.from_array(state.v, backend=model_config.backend, default_origin=(1,1), dtype=model_config.F_TYPE)
+_h = gt_storage.from_array(state.h, backend=model_config.backend, default_origin=(1,1), dtype=model_config.F_TYPE)
 
 shallow_water.adv_nsteps(state, 100)
 
-print("after adv_nsteps _u", state.u[2, 2])
-print("after adv_nsteps _v", state.v[2, 2])
-print("after adv_nsteps _h", state.h[2, 2])
-
-_udelta = np.subtract(state.u.data, _u.data)
-_vdelta = np.subtract(state.v.data, _v.data)
-_hdelta = np.subtract(state.h.data, _h.data)
-
-print("_udelta", _udelta[2,2])
-print("_vdelta", _vdelta[2,2])
-print("_hdelta", _hdelta[2,2])
+_udelta = state.u - _u
+_vdelta = state.v - _v
+_hdelta = state.h - _h
 
 _udelta = _udelta * 100000.0
 _vdelta = _vdelta * 100000.0
 _hdelta = _hdelta * 100000.0
-
-# print("_udelta", _udelta)
-# print("_vdelta", _vdelta)
-# print("_hdelta", _hdelta)
 
 uratio = np.zeros(_digits)
 vratio = np.zeros(_digits)
 hratio = np.zeros(_digits)
 
 
-# # Loop over digits of precision to calculate metric ratio
-# for d in range(_digits):
+# Loop over digits of precision to calculate metric ratio
+for d in range(_digits):
 
-#     # Create a shallow_water state for M(x)
-#     state = ShallowWaterState(geometry, clock=0.0, backend=model_config.backend, u=_u, v=_v, h=_h)
+    # Create a shallow_water state for M(x)
+    state = ShallowWaterState(geometry, clock=0.0, backend=model_config.backend, u=_u, v=_v, h=_h)
     
-#     # Create a shallow_water state for M(x + lambda * dx)
-#     state_delta = ShallowWaterState(geometry, clock=0.0, backend=model_config.backend, u=_u + _lambda * _udelta, v=_v + _lambda * _vdelta, h=_h + _lambda * _hdelta)
+    # Create a shallow_water state for M(x + lambda * dx)
+    state_delta = ShallowWaterState(geometry, clock=0.0, backend=model_config.backend, u=_u + _lambda * _udelta, v=_v + _lambda * _vdelta, h=_h + _lambda * _hdelta)
     
-#     # print("_u + _lambda * _udelta", _u + _lambda * _udelta)
-
-#     # Create a shallow_water_tl state and trajectory for M'(lambda * dx)
-#     trajectory = ShallowWaterState(geometry, clock=0.0, backend=model_config.backend, u=_u, v=_v, h=_h)
-#     state_tl = ShallowWaterState(geometry, clock=0.0, u=_lambda * _udelta, v=_lambda * _vdelta, h=_lambda * _hdelta)
+    # Create a shallow_water_tl state and trajectory for M'(lambda * dx)
+    trajectory = ShallowWaterState(geometry, clock=0.0, backend=model_config.backend, u=_u, v=_v, h=_h)
+    state_tl = ShallowWaterState(geometry, clock=0.0, u=_lambda * _udelta, v=_lambda * _vdelta, h=_lambda * _hdelta)
    
-#     # Advance shallow_water, shallow_water_delta, and shallow_water_tl
-#     shallow_water.adv_nsteps(state, 1)
-#     shallow_water.adv_nsteps(state_delta, 1)
-#     shallow_water_tl.adv_nsteps_tl(state_tl, trajectory, 1)
+    # Advance shallow_water, shallow_water_delta, and shallow_water_tl
+    shallow_water.adv_nsteps(state, 1)
+    shallow_water.adv_nsteps(state_delta, 1)
+    shallow_water_tl.adv_nsteps_tl(state_tl, trajectory, 1)
     
-#     # Calculate and print test metric
-#     _mu = state.u
-#     _mv = state.v
-#     _mh = state.h
+    # Calculate and print test metric
+    _mu = state.u
+    _mv = state.v
+    _mh = state.h
 
-#     _m_udelta = state_delta.u
-#     _m_vdelta = state_delta.v
-#     _m_hdelta = state_delta.h
-
-#     # print("_m_hdelta", _m_hdelta)
+    _m_udelta = state_delta.u
+    _m_vdelta = state_delta.v
+    _m_hdelta = state_delta.h
     
-#     _mprime_udelta = state_tl.u
-#     _mprime_vdelta = state_tl.v
-#     _mprime_hdelta = state_tl.h
-
-#     # print("_mprime_hdelta", _mprime_hdelta)
+    _mprime_udelta = state_tl.u
+    _mprime_vdelta = state_tl.v
+    _mprime_hdelta = state_tl.h
     
-#     # uratio[d] = (_m_udelta[(_xpe - _xps) // 3, (_ype -  _yps) // 3] - _mu[(_xpe - _xps) // 3, (_ype - _yps) // 3]) / _mprime_udelta[(_xpe - _xps) // 3, (_ype - _yps) // 3]
-#     # vratio[d] = (_m_vdelta[(_xpe - _xps) // 3, (_ype -  _yps) // 3] - _mv[(_xpe - _xps) // 3, (_ype - _yps) // 3]) / _mprime_vdelta[(_xpe - _xps) // 3, (_ype - _yps) // 3]
-#     # hratio[d] = (_m_hdelta[(_xpe - _xps) // 3, (_ype -  _yps) // 3] - _mh[(_xpe - _xps) // 3, (_ype - _yps) // 3]) / _mprime_hdelta[(_xpe - _xps) // 3, (_ype - _yps) // 3]
+    uratio[d] = (_m_udelta[(_xpe - _xps) // 3, (_ype -  _yps) // 3] - _mu[(_xpe - _xps) // 3, (_ype - _yps) // 3]) / _mprime_udelta[(_xpe - _xps) // 3, (_ype - _yps) // 3]
+    vratio[d] = (_m_vdelta[(_xpe - _xps) // 3, (_ype -  _yps) // 3] - _mv[(_xpe - _xps) // 3, (_ype - _yps) // 3]) / _mprime_vdelta[(_xpe - _xps) // 3, (_ype - _yps) // 3]
+    hratio[d] = (_m_hdelta[(_xpe - _xps) // 3, (_ype -  _yps) // 3] - _mh[(_xpe - _xps) // 3, (_ype - _yps) // 3]) / _mprime_hdelta[(_xpe - _xps) // 3, (_ype - _yps) // 3]
 
-#     uratio[d] = _mprime_udelta[(_xpe - _xps) // 3, (_ype - _yps) // 3]
-#     vratio[d] = _mprime_vdelta[(_xpe - _xps) // 3, (_ype - _yps) // 3]
-#     hratio[d] = _mprime_hdelta[(_xpe - _xps) // 3, (_ype - _yps) // 3]
+    # Increase precision
+    _lambda = _lambda / 10.0
 
-
+# Loop over each MPI rank to check for proper increase in precision of ratio for decrease in lambda
+for n in range(_nranks):
     
-#     # Increase precision
-#     _lambda = _lambda / 10.0
+    if(_myrank == n):
 
-# print("uratio", uratio)
+        # Write dx info
+        print("\n")
+        print('{0:<10} {1:<35} {2:<32}'.format(" ", f"min udelta = {np.min(_udelta)}", f"max udelta = {np.max(_udelta)}"))
+        print('{0:<10} {1:<35} {2:<32}'.format(" ", f"min vdelta = {np.min(_vdelta)}", f"max vdelta = {np.max(_vdelta)}"))
+        print('{0:<10} {1:<35} {2:<32}'.format(" ", f"min hdelta = {np.min(_hdelta)}", f"max hdelta = {np.max(_hdelta)}"))
+        print("\n")
 
-# # # Loop over each MPI rank to check for proper increase in precision of ratio for decrease in lambda
-# for n in range(_nranks - 1):
-#     print("testing _mrank, _myrank = ", _myrank)
+        # Write column headers
+        print('{0:<30} {1:>24}'.format("Lambda", "( M(x + lambda * dx) - M(x) ) / M'(lambda * dx)"))
+        print('{0:<20} {1:>18} {2:>18} {3:>18}'.format(" ", "U", "V", "H"))
 
-#     if(_myrank == n):
+        _lambda = 1.0
+        _errors = 0
 
-#         # Write dx info
-#         print(f"min udelta = {np.min(_udelta)}, max udelta = {np.max(_udelta)}")
-#         print(f"min vdelta = {np.min(_vdelta)}, max vdelta = {np.max(_vdelta)}")
-#         print(f"min hdelta = {np.min(_hdelta)}, max hdelta = {np.max(_hdelta)}")
+        for d in range(_digits):
+            print('{0:<26} {1:<22} {2:<22} {3:<22}'.format(f'{_lambda}', f'{uratio[d]}', f'{vratio[d]}', f'{hratio[d]}'))
+            if (d >= 1):
+                # Check precision of ratios
+                if(abs(uratio[d] - 1.0) > abs(uratio[d-1] - 1.0)):
+                    print(f"ERROR: Precision of u ratio not decreasing as lambda decreases.  ")
+                    _errors = _errors + 1
+                if(abs(vratio[d] - 1.0) > abs(vratio[d-1] - 1.0)):
+                    print(f"ERROR: Precision of v ratio not decreasing as lambda decreases.  ")
+                    _errors = _errors + 1
+                if(abs(hratio[d] - 1.0) > abs(hratio[d-1] - 1.0)):
+                    print(f"ERROR: Precision of h ratio not decreasing as lambda decreases.  ")
+                    _errors = _errors + 1
 
-#         print(f"Lambda,    ( M(x + lambda * dx) - M(x) ) / M'(lambda * dx)")
-#         print(f"Lambda,     U,     V,     H")
-
-#         _lambda = 1.0
-#         _errors = 0
-
-#         for d in range(_digits):
-#             print(f"{_lambda},     {uratio[d]},     {vratio[d]},     {hratio[d]}")
-#             if (d >= 1):
-#                 # Check precision of ratios
-#                 if(abs(uratio[d] - 1.0) > abs(uratio[d-1] - 1.0)):
-#                     print(f"ERROR: Precision of u ratio not decreasing as lambda decreases.  ")
-#                     _errors = _errors + 1
-#                 if(abs(vratio[d] - 1.0) > abs(vratio[d-1] - 1.0)):
-#                     print(f"ERROR: Precision of v ratio not decreasing as lambda decreases.  ")
-#                     _errors = _errors + 1
-#                 if(abs(hratio[d] - 1.0) > abs(hratio[d-1] - 1.0)):
-#                     print(f"ERROR: Precision of h ratio not decreasing as lambda decreases.  ")
-#                     _errors = _errors + 1
-
-#             # Increase precision
-#             _lambda = _lambda / 10.0
+            # Increase precision
+            _lambda = _lambda / 10.0
     
-#     comm.Barrier()
-
+    comm.Barrier()
 
 if (_errors > 0):
   comm.Abort(-1)

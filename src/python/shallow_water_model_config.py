@@ -5,8 +5,8 @@ import numpy as np
 class ShallowWaterModelConfig:
 
     backend : str = "numpy" 
-    F_TYPE : np.dtype = np.float64
-    I_TYPE : np.dtype = np.int32
+    F_TYPE  : np.dtype = np.float64
+    I_TYPE  : np.dtype = np.int32
 
     def __init__(self, yamlpath=None, dt=None, u0=None, v0=None, b0=None, h0=None):
 

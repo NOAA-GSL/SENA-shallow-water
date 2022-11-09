@@ -4,6 +4,14 @@ import yaml
 import numpy as np
 import dacite
 import gt4py.gtscript as gtscript
+from mpi4py import MPI
+
+if MPI is not None:
+    import os
+
+    gt4py.config.cache_settings["dir_name"] = os.environ.get(
+        "GT_CACHE_DIR_NAME", f".gt_cache_{MPI.COMM_WORLD.Get_rank():06}"
+    )
 
 from gt4py.gtscript import Field
 
@@ -20,11 +28,10 @@ class StencilConfig:
     model: dict
 
     def compile_to_stencil(self, defn_func):
-        return gt4py.gtscript.stencil(
-            backend=self.gt4py['backend'],
-            rebuild=True,
-            format_source=True,
-        )(defn_func)
+        return gtscript.stencil(
+            definition=defn_func,
+            backend=self.gt4py['backend']
+        )
 
 # Get model state one step in the future for the domain interior
 # @gtscript.stencil(backend=backend)
@@ -151,7 +158,7 @@ class StencilFunctions:
         # self.update_interior_adj = config.compile_to_stencil(update_interior_adj)
         # self.update_boundaries_adj = config.compile_to_stencil(update_boundaries_adj)        
 
-if __name__ == "stencils":
+if __name__ == "StencilFactory":
     config = dacite.from_dict(
         data_class=StencilConfig,
         data=yaml.safe_load(open('../../parm/shallow_water.yml')),

@@ -5,7 +5,7 @@ import gt4py.storage as gt_storage
 from shallow_water_model_config import ShallowWaterModelConfig
 from shallow_water_geometry import ShallowWaterGeometry
 from shallow_water_state import ShallowWaterState
-from stencils import stencils
+from StencilFactory import stencils
 
 
 class ShallowWaterModel:
