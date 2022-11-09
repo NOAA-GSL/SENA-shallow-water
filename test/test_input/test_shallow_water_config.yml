@@ -14,5 +14,6 @@ model: {
 }
 
 gt4py: {
-  backend: 'numpy'
+  backend: 'numpy',
+  float_type: !!python/name:numpy.float64
 }

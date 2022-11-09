@@ -33,7 +33,7 @@ def test_shallow_water_model_init():
     gc = ShallowWaterGeometryConfig(nx, ny, xmax, ymax)
     g = ShallowWaterGeometry(gc, comm)
     mc = ShallowWaterModelConfig(dt, u0, v0, b0, h0)
-    gtc = ShallowWaterGT4PyConfig('numpy')
+    gtc = ShallowWaterGT4PyConfig('numpy', np.float64)
 
     model = ShallowWaterModel(mc, gtc, g)
 
@@ -43,6 +43,7 @@ def test_shallow_water_model_init():
     assert geometry.dy == dy
     assert model.dt == dt
     assert model.backend == 'numpy'
+    assert model.float_type == np.float64
 
 @pytest.mark.mpi(min_size=1)
 def test_shallow_water_model_adv_nsteps():
@@ -74,7 +75,7 @@ def test_shallow_water_model_adv_nsteps():
     yme = g.yme
 
     mc = ShallowWaterModelConfig(dt, u0, v0, b0, h0)
-    gtc = ShallowWaterGT4PyConfig('numpy')
+    gtc = ShallowWaterGT4PyConfig('numpy', np.float64)
 
     model = ShallowWaterModel(mc, gtc, g)
 
@@ -125,7 +126,7 @@ def test_shallow_water_model_regression():
 
     gc = ShallowWaterGeometryConfig(nx, ny, xmax, ymax)
     g = ShallowWaterGeometry(gc, comm)
-    gtc = ShallowWaterGT4PyConfig('numpy')
+    gtc = ShallowWaterGT4PyConfig('numpy', np.float64)
 
     h = np.empty((g.npx, g.npy), dtype=float)
     dx = g.dx

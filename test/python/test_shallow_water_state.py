@@ -39,7 +39,7 @@ def input_io_geometry():
 
 @pytest.fixture
 def input_gt4py_config():
-    gt4py = ShallowWaterGT4PyConfig('numpy')
+    gt4py = ShallowWaterGT4PyConfig('numpy', np.float64)
     return gt4py
 
 @pytest.mark.mpi(min_size=1)

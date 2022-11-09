@@ -1,3 +1,6 @@
+import numpy  # Needed to parse/resolve numpy types specified in YAML
+import yaml
+
 class ShallowWaterGeometryConfig:
 
     def __init__(self, nx: int, ny: int, xmax: int, ymax: int):
@@ -18,10 +21,9 @@ class ShallowWaterGeometryConfig:
     
     @classmethod
     def from_YAML_filename(cls, filename: str):
-        import yaml
         with open(filename, 'r') as yamlFile:
             try:
-                config = yaml.safe_load(yamlFile)
+                config = yaml.full_load(yamlFile)
             except yaml.YAMLError as e:
                 print(e)
         geometry = config['geometry']
@@ -30,10 +32,9 @@ class ShallowWaterGeometryConfig:
 
     @classmethod
     def from_YAML_file_object(cls, fileObject):
-        import yaml
         with fileObject:
             try:
-                config = yaml.safe_load(fileObject)
+                config = yaml.full_load(fileObject)
             except yaml.YAMLError as e:
                 print(e)
         geometry = config['geometry']

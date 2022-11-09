@@ -22,4 +22,5 @@ runtime: {
 
 gt4py: {
  backend: 'numpy'
+ float_type: !!python/name:numpy.float64
 }

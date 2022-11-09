@@ -1,5 +1,7 @@
 import sys
 import pytest
+import numpy # Needed to parse/resolve numpy types specified in YAML
+import yaml
 
 sys.path.append("../../src/python")
 
@@ -23,11 +25,10 @@ def test_shallow_water_model_config_arglist():
 
 @pytest.mark.mpi_skip
 def test_shallow_water_model_config_yaml_file():
-    import yaml
     filename = '../test_input/test_shallow_water_config.yml'
     with open(filename, 'r') as yamlFile:
         try:
-            yamlConfig = yaml.safe_load(yamlFile)
+            yamlConfig = yaml.full_load(yamlFile)
         except yaml.YAMLError as e:
             print(e)
     yamlModel = yamlConfig['model']
@@ -42,11 +43,10 @@ def test_shallow_water_model_config_yaml_file():
 
 @pytest.mark.mpi_skip
 def test_shallow_water_model_config_yaml_fp():
-    import yaml
     filename = '../test_input/test_shallow_water_config.yml'
     with open(filename, 'r') as yamlFile:
         try:
-            yamlConfig = yaml.safe_load(yamlFile)
+            yamlConfig = yaml.full_load(yamlFile)
         except yaml.YAMLError as e:
             print(e)
     yamlModel = yamlConfig['model']

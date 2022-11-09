@@ -16,10 +16,11 @@ class ShallowWaterState:
 
         # Set the config for use in GT4Py storage creation
         self.backend = config.backend
+        self.float_type = config.float_type
 
         # Initialize u
         self.u = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                  dtype=np.float64, backend=self.backend, default_origin=(1,1))
+                                  dtype=self.float_type, backend=self.backend, default_origin=(1,1))
         if (u) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):
@@ -27,7 +28,7 @@ class ShallowWaterState:
 
         # Initialize v
         self.v = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                  dtype=np.float64, backend=self.backend, default_origin=(1,1))
+                                  dtype=self.float_type, backend=self.backend, default_origin=(1,1))
         if (v) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):
@@ -35,14 +36,14 @@ class ShallowWaterState:
 
         # Initialize h
         self.h = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                  dtype=np.float64, backend=self.backend, default_origin=(1,1))
+                                  dtype=self.float_type, backend=self.backend, default_origin=(1,1))
         if (h) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):
                     self.h[i - geometry.xms, j - geometry.yms] = h[i - geometry.xps, j - geometry.yps]
 
         # ! Calculate the maximum wave speed from h
-        _max_h = np.zeros(1, np.float64)
+        _max_h = np.zeros(1, self.float_type)
         _local_max = np.full(1, np.amax(self.h))
         geometry.communicator.Allreduce(_local_max, _max_h, op=MPI.MAX)
         self.max_wavespeed = (_g * _max_h)**0.5
