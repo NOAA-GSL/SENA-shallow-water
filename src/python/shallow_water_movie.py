@@ -51,7 +51,7 @@ m = ShallowWaterModel(mc, gtc, g)
 import yaml
 with open(config_file, 'r') as yamlFile:
     try:
-        config = yaml.safe_load(yamlFile)
+        config = yaml.full_load(yamlFile)
     except yaml.YAMLError as e:
         print(e)
 runtime = config['runtime']
