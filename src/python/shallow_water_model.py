@@ -5,8 +5,6 @@ from shallow_water_state import ShallowWaterState
 import gt4py.gtscript as gtscript
 import gt4py.storage as gt_storage
 
-g = 9.81
-
 class ShallowWaterModel:
 
     def __init__(self, modelConfig : ShallowWaterModelConfig, gt4PyConfig: ShallowWaterGT4PyConfig, geometry : ShallowWaterGeometry):
@@ -19,9 +17,14 @@ class ShallowWaterModel:
         self.float_type = self.gt4PyConfig.float_type
         self.field_type = gtscript.Field[gtscript.IJ, self.float_type]
 
+        # Initialize the b array - Currently unused
         self.b = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
                                   dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
 
+        # Set gravitational acceleration constant
+        g = 9.81
+
+        # Define boundary_update stencil function
         def boundary_update(u     : self.field_type,
                             v     : self.field_type,
                             h     : self.field_type,
@@ -68,6 +71,7 @@ class ShallowWaterModel:
                         u_new = -u[-1,0]
                         v_new = v[-1,0]
 
+        # Define interior_update stencil function
         def interior_update(u     : self.field_type,
                             v     : self.field_type,
                             h     : self.field_type,
@@ -96,6 +100,7 @@ class ShallowWaterModel:
                         - 0.5 * dtdx * (h - b) * (u[1,0] - u[-1,0])                  \
                         - 0.5 * dtdy * (h - b) * (v[0,1] - v[0,-1])
 
+        # Compile the stenci functions for the given backend
         self._boundary_update = gtscript.stencil(definition=boundary_update, backend=self.backend)
         self._interior_update = gtscript.stencil(definition=interior_update, backend=self.backend)
 
