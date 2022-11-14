@@ -158,9 +158,9 @@ def test_shallow_water_model_adv_nsteps():
         mprime_vdelta = state_tl.v[xps-xms:xpe-xms+1, yps-yms:ype-yms+1]
         mprime_hdelta = state_tl.h[xps-xms:xpe-xms+1, yps-yms:ype-yms+1]
 
-        uratio[d] = (m_udelta[xps-xms+(xpe-xps)//3,yps-yms+(ype-yps)//3] - mu[xps-xms+(xpe-xps)//3,yps-yms+(ype-yps)//3]) / mprime_udelta[xps-xms+(xpe-xps)//3,yps-yms+(ype-yps)//3]
-        vratio[d] = (m_vdelta[xps-xms+(xpe-xps)//3,yps-yms+(ype-yps)//3] - mv[xps-xms+(xpe-xps)//3,yps-yms+(ype-yps)//3]) / mprime_vdelta[xps-xms+(xpe-xps)//3,yps-yms+(ype-yps)//3]
-        hratio[d] = (m_hdelta[xps-xms+(xpe-xps)//3,yps-yms+(ype-yps)//3] - mh[xps-xms+(xpe-xps)//3,yps-yms+(ype-yps)//3]) / mprime_hdelta[xps-xms+(xpe-xps)//3,yps-yms+(ype-yps)//3]
+        uratio[d] = (m_udelta[(xpe-xps)//3,(ype-yps)//3] - mu[(xpe-xps)//3,(ype-yps)//3]) / mprime_udelta[(xpe-xps)//3,(ype-yps)//3]
+        vratio[d] = (m_vdelta[(xpe-xps)//3,(ype-yps)//3] - mv[(xpe-xps)//3,(ype-yps)//3]) / mprime_vdelta[(xpe-xps)//3,(ype-yps)//3]
+        hratio[d] = (m_hdelta[(xpe-xps)//3,(ype-yps)//3] - mh[(xpe-xps)//3,(ype-yps)//3]) / mprime_hdelta[(xpe-xps)//3,(ype-yps)//3]
 
         lambda_p = lambda_p / 10.0
 
@@ -183,81 +183,19 @@ def test_shallow_water_model_adv_nsteps():
 
                 print(f"{lambda_p:18.12f}{uratio[d]:18.12f}{vratio[d]:18.12f}{hratio[d]:18.12f}")
 
+                if (d > 1):
+                    if ((abs(uratio[d] - 1.0)) > (abs(uratio[d-1] - 1.0))):
+                        print("ERROR: Precision of u ratio not decreasing as lambda decreases.  ")
+                        errors += 1
+                    if ((abs(vratio[d] - 1.0)) > (abs(vratio[d-1] - 1.0))):
+                        print("ERROR: Precision of u ratio not decreasing as lambda decreases.  ")
+                        errors += 1
+                    if ((abs(hratio[d] - 1.0)) > (abs(hratio[d-1] - 1.0))):
+                        print("ERROR: Precision of u ratio not decreasing as lambda decreases.  ")
+                        errors += 1
+
                 lambda_p = lambda_p / 10.0
 
-#    assert_almost_equal(state.clock, step * model.dt + model.dt)
-#    assert_array_equal(state.u.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
-#    assert_array_equal(state.v.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
-#    assert_array_equal(state.h.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
-#
-#    model.adv_nsteps(state, 2)
-#
-#    assert_almost_equal(state.clock, step * model.dt + model.dt + model.dt + model.dt)
-#
-#    h[:,:] = h[:,:] + 10.0
-#    state = ShallowWaterState(g, gtc, u=u, v=v, h=h)
-#
-#    model.adv_nsteps(state, 1)
-#
-#    assert_array_equal(state.u.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
-#    assert_array_equal(state.v.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
-#    assert_array_equal(state.h.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 10.0)
+        comm.Barrier()
 
-#@pytest.mark.mpi(min_size=1)
-#def test_shallow_water_model_regression():
-#    comm = MPI.COMM_WORLD
-#    myrank = comm.Get_rank()
-#    nx = 11
-#    ny = 11
-#    xmax = 10000.0
-#    ymax = 10000.0
-#    u0 = 0.0
-#    v0 = 0.0
-#    b0 = 0.0
-#    h0 = 5030.0
-#    g = 9.81
-#    dt = 0.68 * (xmax / float(nx - 1.0)) / (u0 + (g * (h0 - b0))**0.5)
-#
-#    u_rms_baseline = 0.00161019683016338
-#    v_rms_baseline = 0.00161183246804103
-#    h_rms_baseline = 5000.37196249264
-#
-#    gc = ShallowWaterGeometryConfig(nx, ny, xmax, ymax)
-#    g = ShallowWaterGeometry(gc, comm)
-#    gtc = ShallowWaterGT4PyConfig('numpy', np.float64)
-#
-#    h = np.empty((g.npx, g.npy), dtype=float)
-#    dx = g.dx
-#    dy = g.dy
-#    xmid = g.xmax / 2.0
-#    ymid = g.ymax / 2.0
-#    sigma = np.floor(g.xmax / 20.0)
-#    for i in range(g.xps, g.xpe + 1):
-#        for j in range(g.yps, g.ype + 1):
-#            dsqr = ((i-1) * g.dx - xmid)**2 + ((j-1) * g.dy - ymid)**2
-#            h[i - g.xps,j - g.yps] = 5000.0 + np.exp(-dsqr / sigma**2) * (h0 - 5000.0)
-#    s = ShallowWaterState(g, gtc, h=h)
-#
-#    mc = ShallowWaterModelConfig(dt, u0, v0, b0, h0)
-#
-#    model = ShallowWaterModel(mc, gtc, g)
-#
-#    model.adv_nsteps(s, 100)
-#
-#    if (myrank == 0):
-#        u_full = np.zeros((nx, ny))
-#        v_full = np.zeros((nx, ny))
-#        h_full = np.zeros((nx, ny))
-#    u_full, v_full, h_full = s.gather()
-#
-#    if (myrank == 0):
-#        u_full = u_full * u_full
-#        u_rms = (np.sum(u_full) / (g.nx * g.ny))**0.5
-#        v_full = v_full * v_full
-#        v_rms = (np.sum(v_full) / (g.nx * g.ny))**0.5
-#        h_full = h_full * h_full
-#        h_rms = (np.sum(h_full) / (g.nx * g.ny))**0.5
-#
-#        assert_almost_equal(u_rms, u_rms_baseline, 13)
-#        assert_almost_equal(v_rms, v_rms_baseline, 13)
-#        assert_almost_equal(h_rms, h_rms_baseline, 11)
+    assert errors == 0
