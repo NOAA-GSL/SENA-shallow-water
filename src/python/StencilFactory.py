@@ -65,10 +65,10 @@ def update_interior(u:     FloatFieldIJ,
 
 # Get model state one step in the future for the domain boundaries
 # @gtscript.stencil(backend=backend)
-def update_boundaries(north :  I_TYPE,
-                      south :  I_TYPE,
-                      east  :  I_TYPE,
-                      west  :  I_TYPE,
+def update_boundaries(north :  int,
+                      south :  int,
+                      east  :  int,
+                      west  :  int,
                       u     :  FloatFieldIJ,
                       v     :  FloatFieldIJ,
                       h     :  FloatFieldIJ,

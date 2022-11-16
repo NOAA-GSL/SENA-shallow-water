@@ -27,8 +27,8 @@ class ShallowWaterGeometry:
         self.ymax = geometry.ymax 
 
         # Define the geometry grid spacing
-        self.dx = self.xmax // (np.float64(self.nx) - np.float64(1.0))
-        self.dy = self.ymax // (np.float64(self.ny) - np.float64(1.0))
+        self.dx = self.xmax / (self.nx - 1.0)
+        self.dy = self.ymax / (self.ny - 1.0)
         
         # Initialize the MPI communicator
         self.mpi_comm = mpi_comm
@@ -37,80 +37,81 @@ class ShallowWaterGeometry:
         self.nranks = self.mpi_comm.Get_size()
         self.rank   = self.mpi_comm.Get_rank()
         
-        _factor = np.int32(self.nranks**0.5 + 0.5)
+        _factor = int(self.nranks**0.5 + 0.5)
         
         # Compute the size of the processor grid 
         while (self.nranks % _factor != 0):
             _factor = _factor - 1
+
         if (self.nx >= self.ny):
             self.nxprocs = _factor
         else:
-            self.nxprocs = np.int32(self.nranks // _factor)
+            self.nxprocs = self.nranks // _factor
 
-        self.nyprocs = np.int32(self.nranks // self.nxprocs)
+        self.nyprocs = self.nranks // self.nxprocs
         
         # Compute the processor coordinate for this rank
-        self.xproc = np.int32(self.rank % self.nxprocs)
-        self.yproc = np.int32(self.rank // self.nxprocs)
+        self.xproc = self.rank % self.nxprocs
+        self.yproc = self.rank // self.nxprocs
 
         # Compute the MPI ranks of our neighbors
-        if (self.yproc == self.nyprocs -1):
-            self.north = np.int32(-1)
+        if (self.yproc == self.nyprocs - 1):
+            self.north = -1
         else:
-            self.north = np.int32((self.yproc +1) * self.nxprocs + self.xproc)
+            self.north = (self.yproc + 1) * self.nxprocs + self.xproc
         if (self.yproc == 0):
-            self.south = np.int32(-1)
+            self.south = -1
         else:
-            self.south = np.int32((self.yproc - 1) * self.nxprocs + self.xproc)
+            self.south = (self.yproc - 1) * self.nxprocs + self.xproc
         if (self.xproc == 0):
-            self.west = np.int32(-1)
+            self.west = -1
         else:
-            self.west  = np.int32(self.yproc * self.nxprocs + self.xproc - 1)
+            self.west  = self.yproc * self.nxprocs + self.xproc - 1
         if (self.xproc == self.nxprocs - 1):
-            self.east = np.int32(-1)
+            self.east = -1
         else:
-            self.east = np.int32(self.yproc * self.nxprocs + self.xproc + 1)
+            self.east = self.yproc * self.nxprocs + self.xproc + 1
         
         # Compute the size of the x and y extents for this patch of the domain
-        self.npx = np.int32(self.nx // self.nxprocs)
+        self.npx = self.nx // self.nxprocs
         if (self.xproc >= (self.nxprocs - (self.nx % self.nxprocs))):
           self.npx = self.npx + 1
         
-        self.npy = np.int32(self.ny // self.nyprocs)
+        self.npy = self.ny // self.nyprocs
         if (self.yproc >= (self.nyprocs - (self.ny % self.nyprocs))):
           self.npy = self.npy + 1
         
         # Compute the start/end indices for this patch of the domain
-        self.xps = np.int32(self.nx / self.nxprocs * self.xproc + 1 + max(0, self.xproc - (self.nxprocs - (self.nx % self.nxprocs))))
-        self.xpe = np.int32(self.xps + self.npx - 1)
-        self.yps = np.int32(self.ny / self.nyprocs * self.yproc + 1 + max(0, self.yproc - (self.nyprocs - (self.ny % self.nyprocs))))
-        self.ype = np.int32(self.yps + self.npy - 1)
+        self.xps = self.nx // self.nxprocs * self.xproc + 1 + max(0, self.xproc - (self.nxprocs - (self.nx % self.nxprocs)))
+        self.xpe = self.xps + self.npx - 1
+        self.yps = self.ny // self.nyprocs * self.yproc + 1 + max(0, self.yproc - (self.nyprocs - (self.ny % self.nyprocs)))
+        self.ype = self.yps + self.npy - 1
 
         # Compute the start/end indices for the interior points and memory allocated for this patch
         if (self.north == -1):
-            self.yte = np.int32(self.ype - 1)
-            self.yme = np.int32(self.ype)
+            self.yte = self.ype - 1
+            self.yme = self.ype
         else:
-            self.yte = np.int32(self.ype)
-            self.yme = np.int32(self.ype + 1)
+            self.yte = self.ype
+            self.yme = self.ype + 1
 
         if (self.south == -1):
-            self.yts = np.int32(self.yps + 1)
-            self.yms = np.int32(self.yps)
+            self.yts = self.yps + 1
+            self.yms = self.yps
         else:
-            self.yts = np.int32(self.yps)
-            self.yms = np.int32(self.yps - 1)
+            self.yts = self.yps
+            self.yms = self.yps - 1
 
         if (self.west == -1):
-            self.xts = np.int32(self.xps + 1)
-            self.xms = np.int32(self.xps)
+            self.xts = self.xps + 1
+            self.xms = self.xps
         else:
-            self.xts = np.int32(self.xps)
-            self.xms = np.int32(self.xps - 1)
+            self.xts = self.xps
+            self.xms = self.xps - 1
 
         if (self.east == -1):
-            self.xte = np.int32(self.xpe - 1)
-            self.xme = np.int32(self.xpe)
+            self.xte = self.xpe - 1
+            self.xme = self.xpe
         else:
-            self.xte = np.int32(self.xpe)
-            self.xme = np.int32(self.xpe + 1)
+            self.xte = self.xpe
+            self.xme = self.xpe + 1

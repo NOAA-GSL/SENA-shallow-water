@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 import sys
-sys.path.append("../../src/python")
-
 import numpy as np
 from mpi4py import MPI
 import gt4py.gtscript as gtscript
 import gt4py.storage as gt_storage
+
+sys.path.append("../../src/python")
 
 from shallow_water_geometry_config import ShallowWaterGeometryConfig
 from shallow_water_geometry import ShallowWaterGeometry

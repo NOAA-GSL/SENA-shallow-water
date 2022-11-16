@@ -5,8 +5,8 @@
 ##################
 
 # For GNU
-export CC=gcc
-export FC=gfortran
+# export CC=gcc-11
+# export FC=gfortran-11
 
 # For Intel
 #export CC=icc
@@ -29,7 +29,7 @@ cd build
 ###########
 # Run cmake
 ###########
-cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+cmake .. -DGT4PY=on -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DMPIEXEC_PREFLAGS=--oversubscribe
 
 #######
 # Build
@@ -39,4 +39,4 @@ make -j4 VERBOSE=1
 ######
 # Test
 ######
-ctest --output-on-failure
+# ctest --output-on-failure
