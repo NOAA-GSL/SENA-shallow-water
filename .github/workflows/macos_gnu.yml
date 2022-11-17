@@ -26,10 +26,6 @@ jobs:
       - name: Checkout repository (and LFS objects)
         uses: actions/checkout@v2
       
-      # Unlink gcc - to work around gcc link issues
-      - name: Unlink gcc
-        run: brew unlink gcc@9
-
       # Install OpenMPI
       - name: Install OpenMPI
         run: brew install open-mpi
