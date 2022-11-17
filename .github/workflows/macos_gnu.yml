@@ -32,7 +32,7 @@ jobs:
 
       # Install netCDF
       - name: Install netCDF 
-        run: HOMEBREW_NO_AUTO_UPDATE=1 && brew install netcdf 
+        run: HOMEBREW_NO_AUTO_UPDATE=1 && brew install netcdf netcdf-fortran
       
       # Get NetCDF versions
       - name: Get NetCDF version
@@ -58,8 +58,8 @@ jobs:
           cd serialbox
           mkdir build
           cd build
-          export CC=gcc-10
-          export FC=gfortran-10
+          export CC=gcc-11
+          export FC=gfortran-11
           cmake ../ -DSERIALBOX_ENABLE_FORTRAN=ON
           make
           make install
@@ -70,8 +70,8 @@ jobs:
           rm -rf build
           mkdir build
           cd build
-          export CC=gcc-10
-          export FC=gfortran-10
+          export CC=gcc-11
+          export FC=gfortran-11
           cmake -DCMAKE_BUILD_TYPE=debug -DMPIEXEC_PREFLAGS=--oversubscribe -DGT4PY=on ..
           make
           ctest --output-on-failure
@@ -82,8 +82,8 @@ jobs:
           rm -rf build
           mkdir build
           cd build
-          export CC=gcc-10
-          export FC=gfortran-10          
+          export CC=gcc-11
+          export FC=gfortran-11
           cmake -DCMAKE_BUILD_TYPE=debug -DMPIEXEC_PREFLAGS=--oversubscribe ..
           make
           ctest --output-on-failure
@@ -94,8 +94,8 @@ jobs:
           rm -rf build
           mkdir build
           cd build
-          export CC=gcc-10
-          export FC=gfortran-10           
+          export CC=gcc-11
+          export FC=gfortran-11
           cmake -DCMAKE_BUILD_TYPE=release -DMPIEXEC_PREFLAGS=--oversubscribe ..
           make
           ctest --output-on-failure
