@@ -835,26 +835,22 @@ contains
 
     ! Take care of our northern neighbor's southernmost j-1
     if (ype /= ny) then
-      j = yte+1
+      j = yte
       do i = xte, xts, -1
-        tempb = h_new(i, j) / 4.0_r8kind
-        tempb2 = -(dtdy * 0.5_r8kind * h_new(i, j))
-        tempb3 = traj_v(i, j) * tempb2
-        tempb6 = -(dtdy * 0.5_r8kind * h_new(i, j))
-        tempb7 = (traj_h(i, j) - b(i, j)) * tempb6
-        tempb8 = v_new(i, j) / 4.0_r8kind
-        tempb11 = -(g * 0.5_r8kind * dtdy * v_new(i, j))
-        tempb12 = u_new(i, j) / 4.0_r8kind
-        tempb14 = -(dtdy * 0.5_r8kind * u_new(i, j))
-        tempb15 = traj_v(i, j) * tempb14
+        tempb = h_new(i, j+1) / 4.0_r8kind
+        tempb2 = -(dtdy * 0.5_r8kind * h_new(i, j+1))
+        tempb3 = traj_v(i, j+1) * tempb2
+        tempb6 = -(dtdy * 0.5_r8kind * h_new(i, j+1))
+        tempb7 = (traj_h(i, j+1) - b(i, j+1)) * tempb6
+        tempb8 = v_new(i, j+1) / 4.0_r8kind
+        tempb11 = -(g * 0.5_r8kind * dtdy * v_new(i, j+1))
+        tempb12 = u_new(i, j+1) / 4.0_r8kind
+        tempb14 = -(dtdy * 0.5_r8kind * u_new(i, j+1))
+        tempb15 = traj_v(i, j+1) * tempb14
 
-        h_new(i, j) = 0.0_r8kind
-        v_new(i, j) = 0.0_r8kind
-        u_new(i, j) = 0.0_r8kind
-
-        u(i, j-1) = u(i, j-1) + tempb12 - tempb15
-        v(i, j-1) = v(i, j-1) - tempb7 + tempb8
-        h(i, j-1) = h(i, j-1) + tempb - tempb3 - tempb11
+        u(i, j) = u(i, j) + tempb12 - tempb15
+        v(i, j) = v(i, j) - tempb7 + tempb8
+        h(i, j) = h(i, j) + tempb - tempb3 - tempb11
       end do
     end if
 
@@ -863,29 +859,56 @@ contains
 
       ! Take care of our eastern neighbor's westernmost i-1
       if (xpe /= nx) then
-        i = xte+1
-        tempb = h_new(i, j) / 4.0_r8kind
-        tempb0 = -(dtdx * 0.5_r8kind * h_new(i, j))
-        tempb1 = traj_u(i, j) * tempb0
-        tempb4 = -(dtdx * 0.5_r8kind * h_new(i, j))
-        tempb5 = (traj_h(i, j) - b(i, j)) * tempb4
-        tempb8 = v_new(i, j) / 4.0_r8kind
-        tempb9 = -(dtdx * 0.5_r8kind * v_new(i, j))
-        tempb10 = traj_u(i, j) * tempb9
-        tempb12 = u_new(i, j) / 4.0_r8kind
-        tempb13 = -(dtdx * 0.5_r8kind * u_new(i, j))
-        tempb16 = -(g * 0.5_r8kind * dtdx * u_new(i, j))
-
-        h_new(i, j) = 0.0_r8kind
-        v_new(i, j) = 0.0_r8kind
-        u_new(i, j) = 0.0_r8kind
-
-        u(i-1, j) = u(i-1, j) - tempb5 + tempb12 - 2.0_r8kind * traj_u(i-1, j) * tempb13 / 2.0_r8kind
-        v(i-1, j) = v(i-1, j) + tempb8 - tempb10
-        h(i-1, j) = h(i-1, j) + tempb - tempb1 - tempb16
+        i = xte
+        tempb = h_new(i+1, j) / 4.0_r8kind
+        tempb0 = -(dtdx * 0.5_r8kind * h_new(i+1, j))
+        tempb1 = traj_u(i+1, j) * tempb0
+        tempb4 = -(dtdx * 0.5_r8kind * h_new(i+1, j))
+        tempb5 = (traj_h(i+1, j) - b(i+1, j)) * tempb4
+        tempb8 = v_new(i+1, j) / 4.0_r8kind
+        tempb9 = -(dtdx * 0.5_r8kind * v_new(i+1, j))
+        tempb10 = traj_u(i+1, j) * tempb9
+        tempb12 = u_new(i+1, j) / 4.0_r8kind
+        tempb13 = -(dtdx * 0.5_r8kind * u_new(i+1, j))
+        tempb16 = -(g * 0.5_r8kind * dtdx * u_new(i+1, j))
+        u(i, j) = u(i, j) - tempb5 + tempb12 - 2.0_r8kind * traj_u(i, j) * tempb13 / 2.0_r8kind
+        v(i, j) = v(i, j) + tempb8 - tempb10
+        h(i, j) = h(i, j) + tempb - tempb1 - tempb16
       end if
 
-      ! Take care of our interior i
+    end do
+
+    do j = yte, yts, -1
+      ! Take care of our interior i #1
+      do i = xte-1, xts-1, -1
+        tempb = h_new(i+1, j) / 4.0_r8kind
+        tempb0 = -(dtdx * 0.5_r8kind * h_new(i+1, j))
+        tempb1 = traj_u(i+1, j) * tempb0
+        tempb2 = -(dtdy * 0.5_r8kind * h_new(i+1, j))
+        tempb3 = traj_v(i+1, j) * tempb2
+        tempb4 = -(dtdx * 0.5_r8kind * h_new(i+1, j))
+        tempb5 = (traj_h(i+1, j) - b(i+1, j)) * tempb4
+        tempb6 = -(dtdy * 0.5_r8kind * h_new(i+1, j))
+        tempb7 = (traj_h(i+1, j) - b(i+1, j)) * tempb6
+        tempb8 = v_new(i+1, j) / 4.0_r8kind
+        tempb9 = -(dtdx * 0.5_r8kind * v_new(i+1, j))
+        tempb10 = traj_u(i+1, j) * tempb9
+        tempb11 = -(g * 0.5_r8kind * dtdy * v_new(i+1, j))
+        tempb12 = u_new(i+1, j) / 4.0_r8kind
+        tempb13 = -(dtdx * 0.5_r8kind * u_new(i+1, j))
+        tempb14 = -(dtdy * 0.5_r8kind * u_new(i+1, j))
+        tempb15 = traj_v(i+1, j) * tempb14
+        tempb16 = -(g * 0.5_r8kind * dtdx * u_new(i+1, j))
+
+        u(i, j) = u(i, j) - tempb5 + tempb12 - 2.0_r8kind * traj_u(i, j) * tempb13 / 2.0_r8kind
+        v(i, j) = v(i, j) + tempb8 - tempb10
+        h(i, j) = h(i, j) + tempb - tempb1 - tempb16
+
+      end do  ! Our interior i
+    end do
+
+    do j = yte, yts, -1
+      ! Take care of our interior i #2
       do i = xte, xts, -1
         tempb = h_new(i, j) / 4.0_r8kind
         tempb0 = -(dtdx * 0.5_r8kind * h_new(i, j))
@@ -906,79 +929,137 @@ contains
         tempb15 = traj_v(i, j) * tempb14
         tempb16 = -(g * 0.5_r8kind * dtdx * u_new(i, j))
 
-        h_new(i, j) = 0.0_r8kind
-        v_new(i, j) = 0.0_r8kind
-        u_new(i, j) = 0.0_r8kind
-
-        u(i-1, j) = u(i-1, j) - tempb5 + tempb12 - 2.0_r8kind * traj_u(i-1, j) * tempb13 / 2.0_r8kind
-        v(i-1, j) = v(i-1, j) + tempb8 - tempb10
-        h(i-1, j) = h(i-1, j) + tempb - tempb1 - tempb16
-
         u(i, j) = u(i, j) + (b(i-1, j) - b(i+1, j) + traj_h(i+1, j) - traj_h(i-1, j)) * tempb0 + (traj_v(i+1, j) - traj_v(i-1, j)) * tempb9
         v(i, j) = v(i, j) + (b(i, j-1) - b(i, j+1) + traj_h(i, j+1) - traj_h(i, j-1)) * tempb2 + (traj_u(i, j+1) - traj_u(i, j-1)) * tempb14
         h(i, j) = h(i, j) + (traj_v(i, j+1) - traj_v(i, j-1)) * tempb6 + (traj_u(i+1, j) - traj_u(i-1, j)) * tempb4
 
-        u(i+1, j) = u(i+1, j) + tempb5 + 2.0_r8kind * traj_u(i+1, j) * tempb13 / 2.0_r8kind + tempb12
-        v(i+1, j) = v(i+1, j) + tempb10 + tempb8
-        h(i+1, j) = h(i+1, j) + tempb1 + tempb + tempb16
-
-        u(i, j-1) = u(i, j-1) + tempb12 - tempb15
-        v(i, j-1) = v(i, j-1) - tempb7 + tempb8
-        h(i, j-1) = h(i, j-1) + tempb - tempb3 - tempb11
-
-        u(i, j+1) = u(i, j+1) + tempb15 + tempb12
-        v(i, j+1) = v(i, j+1) + tempb7 + tempb8
-        h(i, j+1) = h(i, j+1) + tempb3 + tempb + tempb11
       end do  ! Our interior i
+    end do
 
+    do j = yte, yts, -1
+      ! Take care of our interior i #3
+      do i = xte+1, xts+1, -1
+        tempb = h_new(i-1, j) / 4.0_r8kind
+        tempb0 = -(dtdx * 0.5_r8kind * h_new(i-1, j))
+        tempb1 = traj_u(i-1, j) * tempb0
+        tempb2 = -(dtdy * 0.5_r8kind * h_new(i-1, j))
+        tempb3 = traj_v(i-1, j) * tempb2
+        tempb4 = -(dtdx * 0.5_r8kind * h_new(i-1, j))
+        tempb5 = (traj_h(i-1, j) - b(i-1, j)) * tempb4
+        tempb6 = -(dtdy * 0.5_r8kind * h_new(i-1, j))
+        tempb7 = (traj_h(i-1, j) - b(i-1, j)) * tempb6
+        tempb8 = v_new(i-1, j) / 4.0_r8kind
+        tempb9 = -(dtdx * 0.5_r8kind * v_new(i-1, j))
+        tempb10 = traj_u(i-1, j) * tempb9
+        tempb11 = -(g * 0.5_r8kind * dtdy * v_new(i-1, j))
+        tempb12 = u_new(i-1, j) / 4.0_r8kind
+        tempb13 = -(dtdx * 0.5_r8kind * u_new(i-1, j))
+        tempb14 = -(dtdy * 0.5_r8kind * u_new(i-1, j))
+        tempb15 = traj_v(i-1, j) * tempb14
+        tempb16 = -(g * 0.5_r8kind * dtdx * u_new(i-1, j))
+
+        u(i, j) = u(i, j) + tempb5 + 2.0_r8kind * traj_u(i, j) * tempb13 / 2.0_r8kind + tempb12
+        v(i, j) = v(i, j) + tempb10 + tempb8
+        h(i, j) = h(i, j) + tempb1 + tempb + tempb16
+      end do  ! Our interior i
+    end do
+
+    do j = yte-1, yts-1, -1
+      ! Take care of our interior i #4
+      do i = xte, xts, -1
+        tempb = h_new(i, j+1) / 4.0_r8kind
+        tempb0 = -(dtdx * 0.5_r8kind * h_new(i, j+1))
+        tempb1 = traj_u(i, j+1) * tempb0
+        tempb2 = -(dtdy * 0.5_r8kind * h_new(i, j+1))
+        tempb3 = traj_v(i, j+1) * tempb2
+        tempb4 = -(dtdx * 0.5_r8kind * h_new(i, j+1))
+        tempb5 = (traj_h(i, j+1) - b(i, j+1)) * tempb4
+        tempb6 = -(dtdy * 0.5_r8kind * h_new(i, j+1))
+        tempb7 = (traj_h(i, j+1) - b(i, j+1)) * tempb6
+        tempb8 = v_new(i, j+1) / 4.0_r8kind
+        tempb9 = -(dtdx * 0.5_r8kind * v_new(i, j+1))
+        tempb10 = traj_u(i, j+1) * tempb9
+        tempb11 = -(g * 0.5_r8kind * dtdy * v_new(i, j+1))
+        tempb12 = u_new(i, j+1) / 4.0_r8kind
+        tempb13 = -(dtdx * 0.5_r8kind * u_new(i, j+1))
+        tempb14 = -(dtdy * 0.5_r8kind * u_new(i, j+1))
+        tempb15 = traj_v(i, j+1) * tempb14
+        tempb16 = -(g * 0.5_r8kind * dtdx * u_new(i, j+1))
+
+        u(i, j) = u(i, j) + tempb12 - tempb15
+        v(i, j) = v(i, j) - tempb7 + tempb8
+        h(i, j) = h(i, j) + tempb - tempb3 - tempb11
+      end do  ! Our interior i
+    end do
+
+    do j = yte+1, yts+1, -1
+      ! Take care of our interior i #5
+      do i = xte, xts, -1
+        tempb = h_new(i, j-1) / 4.0_r8kind
+        tempb0 = -(dtdx * 0.5_r8kind * h_new(i, j-1))
+        tempb1 = traj_u(i, j-1) * tempb0
+        tempb2 = -(dtdy * 0.5_r8kind * h_new(i, j-1))
+        tempb3 = traj_v(i, j-1) * tempb2
+        tempb4 = -(dtdx * 0.5_r8kind * h_new(i, j-1))
+        tempb5 = (traj_h(i, j-1) - b(i, j-1)) * tempb4
+        tempb6 = -(dtdy * 0.5_r8kind * h_new(i, j-1))
+        tempb7 = (traj_h(i, j-1) - b(i, j-1)) * tempb6
+        tempb8 = v_new(i, j-1) / 4.0_r8kind
+        tempb9 = -(dtdx * 0.5_r8kind * v_new(i, j-1))
+        tempb10 = traj_u(i, j-1) * tempb9
+        tempb11 = -(g * 0.5_r8kind * dtdy * v_new(i, j-1))
+        tempb12 = u_new(i, j-1) / 4.0_r8kind
+        tempb13 = -(dtdx * 0.5_r8kind * u_new(i, j-1))
+        tempb14 = -(dtdy * 0.5_r8kind * u_new(i, j-1))
+        tempb15 = traj_v(i, j-1) * tempb14
+        tempb16 = -(g * 0.5_r8kind * dtdx * u_new(i, j-1))
+
+        u(i, j) = u(i, j) + tempb15 + tempb12
+        v(i, j) = v(i, j) + tempb7 + tempb8
+        h(i, j) = h(i, j) + tempb3 + tempb + tempb11
+      end do  ! Our interior i
+    end do
+
+    do j = yte, yts, -1
       ! Take care of our western neighbor's easternmost i+1
       if (xps /= 1) then
-        i = xts - 1
-        tempb = h_new(i, j) / 4.0_r8kind
-        tempb0 = -(dtdx * 0.5_r8kind * h_new(i, j))
-        tempb1 = traj_u(i, j) * tempb0
-        tempb4 = -(dtdx * 0.5_r8kind * h_new(i, j))
-        tempb5 = (traj_h(i, j) - b(i, j)) * tempb4
-        tempb8 = v_new(i, j) / 4.0_r8kind
-        tempb9 = -(dtdx * 0.5_r8kind * v_new(i, j))
-        tempb10 = traj_u(i, j) * tempb9
-        tempb12 = u_new(i, j) / 4.0_r8kind
-        tempb13 = -(dtdx * 0.5_r8kind * u_new(i, j))
-        tempb16 = -(g * 0.5_r8kind * dtdx * u_new(i, j))
-
-        h_new(i, j) = 0.0_r8kind
-        v_new(i, j) = 0.0_r8kind
-        u_new(i, j) = 0.0_r8kind
-
-        u(i+1, j) = u(i+1, j) + tempb5 + 2.0_r8kind * traj_u(i+1, j) * tempb13 / 2.0_r8kind + tempb12
-        v(i+1, j) = v(i+1, j) + tempb10 + tempb8
-        h(i+1, j) = h(i+1, j) + tempb1 + tempb + tempb16
+        i = xts
+        tempb = h_new(i-1, j) / 4.0_r8kind
+        tempb0 = -(dtdx * 0.5_r8kind * h_new(i-1, j))
+        tempb1 = traj_u(i-1, j) * tempb0
+        tempb4 = -(dtdx * 0.5_r8kind * h_new(i-1, j))
+        tempb5 = (traj_h(i-1, j) - b(i-1, j)) * tempb4
+        tempb8 = v_new(i-1, j) / 4.0_r8kind
+        tempb9 = -(dtdx * 0.5_r8kind * v_new(i-1, j))
+        tempb10 = traj_u(i-1, j) * tempb9
+        tempb12 = u_new(i-1, j) / 4.0_r8kind
+        tempb13 = -(dtdx * 0.5_r8kind * u_new(i-1, j))
+        tempb16 = -(g * 0.5_r8kind * dtdx * u_new(i-1, j))
+        u(i, j) = u(i, j) + tempb5 + 2.0_r8kind * traj_u(i, j) * tempb13 / 2.0_r8kind + tempb12
+        v(i, j) = v(i, j) + tempb10 + tempb8
+        h(i, j) = h(i, j) + tempb1 + tempb + tempb16
       end if
 
     end do  ! Our interior j
 
     ! Take care of our sourthern neighbor's northernmost j+1
     if (yps /= 1) then
-      j = yts-1
+      j = yts
       do i = xte, xts, -1
-        tempb = h_new(i, j) / 4.0_r8kind
-        tempb2 = -(dtdy * 0.5_r8kind * h_new(i, j))
-        tempb3 = traj_v(i, j) * tempb2
-        tempb6 = -(dtdy * 0.5_r8kind * h_new(i, j))
-        tempb7 = (traj_h(i, j) - b(i, j)) * tempb6
-        tempb8 = v_new(i, j) / 4.0_r8kind
-        tempb11 = -(g * 0.5_r8kind * dtdy * v_new(i, j))
-        tempb12 = u_new(i, j) / 4.0_r8kind
-        tempb14 = -(dtdy * 0.5_r8kind * u_new(i, j))
-        tempb15 = traj_v(i, j) * tempb14
+        tempb = h_new(i, j-1) / 4.0_r8kind
+        tempb2 = -(dtdy * 0.5_r8kind * h_new(i, j-1))
+        tempb3 = traj_v(i, j-1) * tempb2
+        tempb6 = -(dtdy * 0.5_r8kind * h_new(i, j-1))
+        tempb7 = (traj_h(i, j-1) - b(i, j-1)) * tempb6
+        tempb8 = v_new(i, j-1) / 4.0_r8kind
+        tempb11 = -(g * 0.5_r8kind * dtdy * v_new(i, j-1))
+        tempb12 = u_new(i, j-1) / 4.0_r8kind
+        tempb14 = -(dtdy * 0.5_r8kind * u_new(i, j-1))
+        tempb15 = traj_v(i, j-1) * tempb14
 
-        h_new(i, j) = 0.0_r8kind
-        v_new(i, j) = 0.0_r8kind
-        u_new(i, j) = 0.0_r8kind
-
-        u(i, j+1) = u(i, j+1) + tempb15 + tempb12
-        v(i, j+1) = v(i, j+1) + tempb7 + tempb8
-        h(i, j+1) = h(i, j+1) + tempb3 + tempb + tempb11
+        u(i, j) = u(i, j) + tempb15 + tempb12
+        v(i, j) = v(i, j) + tempb7 + tempb8
+        h(i, j) = h(i, j) + tempb3 + tempb + tempb11
       end do
     end if
 
