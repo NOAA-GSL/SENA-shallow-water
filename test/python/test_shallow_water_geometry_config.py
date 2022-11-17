@@ -55,3 +55,4 @@ def test_shallow_water_geometry_config_yaml_fp():
     assert config.ny == yamlGeometry['ny']
     assert config.xmax == yamlGeometry['xmax']
     assert config.ymax == yamlGeometry['ymax']
+
