@@ -46,3 +46,4 @@ def test_shallow_water_gt4py_config_yaml_fp():
 
     assert config.backend == yamlGt4Py['backend']
     assert config.float_type == yamlGt4Py['float_type']
+
