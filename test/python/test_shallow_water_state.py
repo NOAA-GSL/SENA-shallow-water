@@ -169,3 +169,4 @@ def test_shallow_water_state_write(input_io_geometry, input_gt4py_config):
     assert_array_equal(state_read.u.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], u)
     assert_array_equal(state_read.v.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], v)
     assert_array_equal(state_read.h.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], h)
+
