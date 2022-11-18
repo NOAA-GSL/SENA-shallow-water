@@ -125,6 +125,10 @@ jobs:
         with:
           python-version: '3.9' 
 
+      # Install Python dependencies
+      - name: Install Python dependencies
+        run: pip install -r ./requirements.txt
+
       # Cache Serialbox
       - name: Cache Serialbox
         id: cache-serialbox
@@ -164,6 +168,12 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=debug -DCMAKE_PREFIX_PATH='~;~/netcdf;~/boost;~/serialbox/install' -DGT4PY=on ..
           make
           ctest --output-on-failure
+          cd ../test/python
+          mpirun -n 1 python -m pytest -s
+          mpirun -n 1 python -m pytest --with-mpi -s
+          mpirun -n 2 python -m pytest --with-mpi -s
+          mpirun -n 4 python -m pytest --with-mpi -s
+          mpirun -n 9 python -m pytest --with-mpi -s
 
       # Test debug mode
       - name: Test Shallow Water Debug
