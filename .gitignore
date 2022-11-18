@@ -1,3 +1,19 @@
 # Ignore emacs backup files
 *~
 #*
+
+# Ignore NetCDF files
+*.nc
+
+# Ignore Python/GT4Py cache
+.gt_cache
+__pycache__
+
+# Ignore Direnv and env dot files
+*.envrc
+*.direnv
+
+# Ignore the build and exe dirs
+exe
+build
+
