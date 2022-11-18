@@ -127,7 +127,7 @@ jobs:
 
       # Install Python dependencies
       - name: Install Python dependencies
-        run: pip install -r ./requirements.txt
+        run: pip install -r ${GITHUB_WORKSPACE}/requirements.txt
 
       # Cache Serialbox
       - name: Cache Serialbox
