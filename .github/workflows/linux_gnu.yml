@@ -84,11 +84,11 @@ jobs:
           make
           ctest --output-on-failure
           cd ../test/python
-          mpiexec -n 1 python -m pytest
-          mpiexec -n 1 python -m pytest --with-mpi
-          mpiexec -n 2 python -m pytest --with-mpi
-          mpiexec -n 4 python -m pytest --with-mpi
-          mpiexec -n 9 python -m pytest --with-mpi
+          mpiexec -n 1 --oversubscribe python -m pytest
+          mpiexec -n 1 --oversubscribe python -m pytest --with-mpi
+          mpiexec -n 2 --oversubscribe python -m pytest --with-mpi
+          mpiexec -n 4 --oversubscribe python -m pytest --with-mpi
+          mpiexec -n 9 --oversubscribe python -m pytest --with-mpi
 
       # Test debug mode
       - name: Test Shallow Water Debug
