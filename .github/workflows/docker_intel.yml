@@ -30,7 +30,19 @@ jobs:
     - name: Test Shallow Water GT4PY
       run: docker exec intel-oneapi bash -c "cd SENA-shallow-water; mkdir build; cd build; cmake .. -DCMAKE_BUILD_TYPE=debug -DGT4PY=on; make VERBOSE=1; ctest --output-on-failure"
 
-    # Test debug mode
+    # Test GT4PY implementation
+    - name: Test Shallow Water GT4PY implementation non-MPI tests
+      run: docker exec intel-oneapi bash -c "cd SENA-shallow-water/test/python; mpiexec -n 1 python3 -m pytest -s"
+    - name: Test Shallow Water GT4PY implementation MPI serial
+      run: docker exec intel-oneapi bash -c "cd SENA-shallow-water/test/python; mpiexec -n 1 python3 -m pytest --with-mpi -s"
+    - name: Test Shallow Water GT4PY implementation MPI 2 ranks
+      run: docker exec intel-oneapi bash -c "cd SENA-shallow-water/test/python; mpiexec -n 2 python3 -m pytest --with-mpi -s"
+    - name: Test Shallow Water GT4PY implementation MPI 4 ranks
+      run: docker exec intel-oneapi bash -c "cd SENA-shallow-water/test/python; mpiexec -n 4 python3 -m pytest --with-mpi -s"
+    - name: Test Shallow Water GT4PY implementation MPI 9 ranks
+      run: docker exec intel-oneapi bash -c "cd SENA-shallow-water/test/python; mpiexec -n 9 python3 -m pytest --with-mpi -s"
+
+# Test debug mode
     - name: Test Shallow Water Debug
       run: docker exec intel-oneapi bash -c "cd SENA-shallow-water; mkdir build; cd build; cmake .. -DCMAKE_BUILD_TYPE=debug; make VERBOSE=1; ctest --output-on-failure"
 
