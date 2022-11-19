@@ -169,6 +169,10 @@ jobs:
           make
           ctest --output-on-failure
           cd ../test/python
+          ls -l
+          ls -l ../
+          ls -l ../test_output
+          rm -f ../test_output/*
           mpirun -n 1 python -m pytest -s
           mpirun -n 1 python -m pytest --with-mpi -s
           mpirun -n 2 python -m pytest --with-mpi -s
