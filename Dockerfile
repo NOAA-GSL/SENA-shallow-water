@@ -5,7 +5,8 @@ RUN apt-get update -y && \
     apt-get install -y --no-install-recommends -o=Dpkg::Use-Pty=0 \
         build-essential \
         ca-certificates \
-	cmake \
+        cmake \
+        git \
         gnupg \
         libarchive13 \
         libboost-all-dev \
@@ -57,32 +58,33 @@ RUN apt-get update -y && \
         intel-oneapi-compiler-fortran \
         intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic
 
+
 # Set /opt/intel/oneapi/setvars.sh variables
-ENV TBBROOT=/opt/intel/oneapi/tbb/2021.6.0/env/..
+ENV TBBROOT=/opt/intel/oneapi/tbb/2021.7.1/env/..
 ENV ONEAPI_ROOT=/opt/intel/oneapi
-ENV PKG_CONFIG_PATH=/opt/intel/oneapi/tbb/2021.6.0/env/../lib/pkgconfig:/opt/intel/oneapi/mpi/2021.6.0/lib/pkgconfig:/opt/intel/oneapi/compiler/2022.1.0/lib/pkgconfig
-ENV FPGA_VARS_DIR=/opt/intel/oneapi/compiler/2022.1.0/linux/lib/oclfpga
-ENV I_MPI_ROOT=/opt/intel/oneapi/mpi/2021.6.0
-ENV FI_PROVIDER_PATH=/opt/intel/oneapi/mpi/2021.6.0//libfabric/lib/prov:/usr/lib64/libfabric
-ENV DIAGUTIL_PATH=/opt/intel/oneapi/debugger/2021.6.0/sys_check/debugger_sys_check.py:/opt/intel/oneapi/compiler/2022.1.0/sys_check/sys_check.sh
-ENV MANPATH=/opt/intel/oneapi/mpi/2021.6.0/man:/opt/intel/oneapi/debugger/2021.6.0/documentation/man:/opt/intel/oneapi/compiler/2022.1.0/documentation/en/man/common::
-ENV GDB_INFO=/opt/intel/oneapi/debugger/2021.6.0/documentation/info/
-ENV CMAKE_PREFIX_PATH=/opt/intel/oneapi/tbb/2021.6.0/env/..:/opt/intel/oneapi/compiler/2022.1.0/linux/IntelDPCPP
-ENV CMPLR_ROOT=/opt/intel/oneapi/compiler/2022.1.0
-ENV INFOPATH=/opt/intel/oneapi/debugger/2021.6.0/gdb/intel64/lib
-ENV LIBRARY_PATH=/opt/intel/oneapi/tbb/2021.6.0/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.6.0//libfabric/lib:/opt/intel/oneapi/mpi/2021.6.0//lib/release:/opt/intel/oneapi/mpi/2021.6.0//lib:/opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/2022.1.0/linux/lib
-ENV OCL_ICD_FILENAMES=libintelocl_emu.so:libalteracl.so:/opt/intel/oneapi/compiler/2022.1.0/linux/lib/x64/libintelocl.so
-ENV CLASSPATH=/opt/intel/oneapi/mpi/2021.6.0//lib/mpi.jar
-ENV INTELFPGAOCLSDKROOT=/opt/intel/oneapi/compiler/2022.1.0/linux/lib/oclfpga
-ENV LD_LIBRARY_PATH=/opt/intel/oneapi/tbb/2021.6.0/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.6.0//libfabric/lib:/opt/intel/oneapi/mpi/2021.6.0//lib/release:/opt/intel/oneapi/mpi/2021.6.0//lib:/opt/intel/oneapi/debugger/2021.6.0/gdb/intel64/lib:/opt/intel/oneapi/debugger/2021.6.0/libipt/intel64/lib:/opt/intel/oneapi/debugger/2021.6.0/dep/lib:/opt/intel/oneapi/compiler/2022.1.0/linux/lib:/opt/intel/oneapi/compiler/2022.1.0/linux/lib/x64:/opt/intel/oneapi/compiler/2022.1.0/linux/lib/oclfpga/host/linux64/lib:/opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin
-ENV NLSPATH=/opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin/locale/%l_%t/%N
-ENV PATH=/opt/intel/oneapi/mpi/2021.6.0//libfabric/bin:/opt/intel/oneapi/mpi/2021.6.0//bin:/opt/intel/oneapi/dev-utilities/2021.6.0/bin:/opt/intel/oneapi/debugger/2021.6.0/gdb/intel64/bin:/opt/intel/oneapi/compiler/2022.1.0/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/2022.1.0/linux/bin/intel64:/opt/intel/oneapi/compiler/2022.1.0/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENV INTEL_PYTHONHOME=/opt/intel/oneapi/debugger/2021.6.0/dep
-ENV CPATH=/opt/intel/oneapi/tbb/2021.6.0/env/../include:/opt/intel/oneapi/mpi/2021.6.0//include:/opt/intel/oneapi/dev-utilities/2021.6.0/include
+ENV PKG_CONFIG_PATH=/opt/intel/oneapi/tbb/2021.7.1/env/../lib/pkgconfig:/opt/intel/oneapi/mpi/2021.7.1/lib/pkgconfig:/opt/intel/oneapi/compiler/2022.2.1/lib/pkgconfig
+ENV FPGA_VARS_DIR=/opt/intel/oneapi/compiler/2022.2.1/linux/lib/oclfpga
+ENV I_MPI_ROOT=/opt/intel/oneapi/mpi/2021.7.1
+ENV FI_PROVIDER_PATH=/opt/intel/oneapi/mpi/2021.7.1//libfabric/lib/prov:/usr/lib64/libfabric
+ENV DIAGUTIL_PATH=/opt/intel/oneapi/debugger/2021.7.1/sys_check/debugger_sys_check.py:/opt/intel/oneapi/compiler/2022.2.1/sys_check/sys_check.sh
+ENV MANPATH=/opt/intel/oneapi/mpi/2021.7.1/man:/opt/intel/oneapi/debugger/2021.7.1/documentation/man:/opt/intel/oneapi/compiler/2022.2.1/documentation/en/man/common::
+ENV GDB_INFO=/opt/intel/oneapi/debugger/2021.7.1/documentation/info/
+ENV CMAKE_PREFIX_PATH=/opt/intel/oneapi/tbb/2021.7.1/env/..:/opt/intel/oneapi/compiler/2022.2.1/linux/IntelDPCPP
+ENV CMPLR_ROOT=/opt/intel/oneapi/compiler/2022.2.1
+ENV INFOPATH=/opt/intel/oneapi/debugger/2021.7.1/gdb/intel64/lib
+ENV LIBRARY_PATH=/opt/intel/oneapi/tbb/2021.7.1/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.7.1//libfabric/lib:/opt/intel/oneapi/mpi/2021.7.1//lib/release:/opt/intel/oneapi/mpi/2021.7.1//lib:/opt/intel/oneapi/compiler/2022.2.1/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/2022.2.1/linux/lib
+ENV OCL_ICD_FILENAMES=libintelocl_emu.so:libalteracl.so:/opt/intel/oneapi/compiler/2022.2.1/linux/lib/x64/libintelocl.so
+ENV CLASSPATH=/opt/intel/oneapi/mpi/2021.7.1//lib/mpi.jar
+ENV INTELFPGAOCLSDKROOT=/opt/intel/oneapi/compiler/2022.2.1/linux/lib/oclfpga
+ENV LD_LIBRARY_PATH=/opt/intel/oneapi/tbb/2021.7.1/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.7.1//libfabric/lib:/opt/intel/oneapi/mpi/2021.7.1//lib/release:/opt/intel/oneapi/mpi/2021.7.1//lib:/opt/intel/oneapi/debugger/2021.7.1/gdb/intel64/lib:/opt/intel/oneapi/debugger/2021.7.1/libipt/intel64/lib:/opt/intel/oneapi/debugger/2021.7.1/dep/lib:/opt/intel/oneapi/compiler/2022.2.1/linux/lib:/opt/intel/oneapi/compiler/2022.2.1/linux/lib/x64:/opt/intel/oneapi/compiler/2022.2.1/linux/lib/oclfpga/host/linux64/lib:/opt/intel/oneapi/compiler/2022.2.1/linux/compiler/lib/intel64_lin
+ENV NLSPATH=/opt/intel/oneapi/compiler/2022.2.1/linux/compiler/lib/intel64_lin/locale/%l_%t/%N
+ENV PATH=/opt/intel/oneapi/mpi/2021.7.1//libfabric/bin:/opt/intel/oneapi/mpi/2021.7.1//bin:/opt/intel/oneapi/dev-utilities/2021.7.1/bin:/opt/intel/oneapi/debugger/2021.7.1/gdb/intel64/bin:/opt/intel/oneapi/compiler/2022.2.1/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/2022.2.1/linux/bin/intel64:/opt/intel/oneapi/compiler/2022.2.1/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV INTEL_PYTHONHOME=/opt/intel/oneapi/debugger/2021.7.1/dep
+ENV CPATH=/opt/intel/oneapi/tbb/2021.7.1/env/../include:/opt/intel/oneapi/mpi/2021.7.1//include:/opt/intel/oneapi/dev-utilities/2021.7.1/include
 
 # Install Python dependencies
-ADD ./requirements.txt
-RUN pip install -r ./requirements.txt && \
+ADD ./requirements.txt .
+RUN pip3 install -r ./requirements.txt && \
     rm -rf ./requirements.txt
 
 # Set compilers to MPI wrappers
