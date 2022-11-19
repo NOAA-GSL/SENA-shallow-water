@@ -187,7 +187,11 @@ jobs:
           source /opt/intel/oneapi/setvars.sh
           cd test/python
           which mpirun
-          rm ../test_output/*
+          ls -l ../
+	  echo "foo"
+	  le -l ../test_output
+	  echo "bar"
+          rm ../test_output/*.nc
           mpirun -n 1 --oversubscribe python -m pytest -s
           mpirun -n 1 --oversubscribe python -m pytest --with-mpi -s
           mpirun -n 2 --oversubscribe python -m pytest --with-mpi -s
