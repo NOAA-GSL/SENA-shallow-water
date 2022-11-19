@@ -176,7 +176,6 @@ jobs:
         run: |
           source /opt/intel/oneapi/setvars.sh
           cd test/python
-          # touch ../test_output/baz
           mpiexec -n 1 python -m pytest -s
           mpiexec -n 1 python -m pytest --with-mpi -s
           mpiexec -n 2 python -m pytest --with-mpi -s
