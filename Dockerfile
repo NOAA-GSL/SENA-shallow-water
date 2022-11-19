@@ -80,6 +80,11 @@ ENV PATH=/opt/intel/oneapi/mpi/2021.6.0//libfabric/bin:/opt/intel/oneapi/mpi/202
 ENV INTEL_PYTHONHOME=/opt/intel/oneapi/debugger/2021.6.0/dep
 ENV CPATH=/opt/intel/oneapi/tbb/2021.6.0/env/../include:/opt/intel/oneapi/mpi/2021.6.0//include:/opt/intel/oneapi/dev-utilities/2021.6.0/include
 
+# Install Python dependencies
+ADD ./requirements.txt
+RUN pip install -r ./requirements.txt && \
+    rm -rf ./requirements.txt
+
 # Set compilers to MPI wrappers
 ENV CC='mpiicc'
 ENV FC='mpiifort'
