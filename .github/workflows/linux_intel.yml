@@ -131,7 +131,9 @@ jobs:
 
       # Install Python dependencies
       - name: Install Python dependencies
-        run: pip install -r ${GITHUB_WORKSPACE}/requirements.txt
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          pip install -r ${GITHUB_WORKSPACE}/requirements.txt
 
       # Cache Serialbox
       - name: Cache Serialbox
