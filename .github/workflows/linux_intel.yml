@@ -191,7 +191,9 @@ jobs:
           echo "foo"
           ls -l ../test_output
           echo "bar"
-          rm ../test_output/*.nc
+          touch ../test_output/baz
+          ls -l ../test_output
+          echo "baz"
           mpirun -n 1 --oversubscribe python -m pytest -s
           mpirun -n 1 --oversubscribe python -m pytest --with-mpi -s
           mpirun -n 2 --oversubscribe python -m pytest --with-mpi -s
