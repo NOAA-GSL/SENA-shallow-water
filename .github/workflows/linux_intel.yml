@@ -170,36 +170,18 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=debug -DCMAKE_PREFIX_PATH='~;~/netcdf;~/boost;~/serialbox/install' -DGT4PY=on ..
           make
           ctest --output-on-failure
-#          cd ../test/python
-#          ls -l
-#          ls -lR ../
-#          ls -l ../test_output/
-#          rm -f ../test_output/*
-#          mpirun -n 1 python -m pytest -s
-#          mpirun -n 1 python -m pytest --with-mpi -s
-#          mpirun -n 2 python -m pytest --with-mpi -s
-#          mpirun -n 4 python -m pytest --with-mpi -s
-#          mpirun -n 9 python -m pytest --with-mpi -s
 
       # Test GT4Py implementation
       - name: Test GT4Py implementation
         run: |
           source /opt/intel/oneapi/setvars.sh
           cd test/python
-          which mpirun
-          which mpiexec
-          ls -l ../
-          echo "foo"
-          ls -l ../test_output
-          echo "bar"
           touch ../test_output/baz
-          ls -l ../test_output
-          echo "baz"
-          mpirun -n 1 python -m pytest -s
+          mpiexec -n 1 python -m pytest -s
           mpiexec -n 1 python -m pytest --with-mpi -s
-          mpirun -n 2 python -m pytest --with-mpi -s
-          mpirun -n 4 python -m pytest --with-mpi -s
-          mpirun -n 9 python -m pytest --with-mpi -s
+          mpiexec -n 2 python -m pytest --with-mpi -s
+          mpiexec -n 4 python -m pytest --with-mpi -s
+          mpiexec -n 9 python -m pytest --with-mpi -s
 
       # Test debug mode
       - name: Test Shallow Water Debug
