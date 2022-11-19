@@ -27,7 +27,7 @@ jobs:
       # Cache Intel HPC Toolkit
       - name: Cache Intel HPC Toolkit
         id: cache-intel-hpc-toolkit
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: /opt/intel/oneapi
           key: install-${{ env.LINUX_HPCKIT_URL }}-all
@@ -55,7 +55,7 @@ jobs:
       # Cache NetCDF
       - name: Cache NetCDF
         id: cache-netcdf
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/netcdf
           key: netcdf-c-4.7.4-${{ runner.os }}-intel
@@ -128,7 +128,7 @@ jobs:
       # Cache Serialbox
       - name: Cache Serialbox
         id: cache-serialbox
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/serialbox
           key: serialbox-2.2.0-${{ runner.os }}-intel
