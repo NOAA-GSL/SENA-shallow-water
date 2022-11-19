@@ -185,15 +185,11 @@ jobs:
       - name: Test GT4Py implementation
         run: |
           cd test/python
-          ls -l
-          ls -lR ../
-          ls -l ../test_output/
-          rm -f ../test_output/*
-          mpirun -n 1 python -m pytest -s
-          mpirun -n 1 python -m pytest --with-mpi -s
-          mpirun -n 2 python -m pytest --with-mpi -s
-          mpirun -n 4 python -m pytest --with-mpi -s
-          mpirun -n 9 python -m pytest --with-mpi -s
+          mpirun -n 1 --oversubscribe python -m pytest -s
+          mpirun -n 1 --oversubscribe python -m pytest --with-mpi -s
+          mpirun -n 2 --oversubscribe python -m pytest --with-mpi -s
+          mpirun -n 4 --oversubscribe python -m pytest --with-mpi -s
+          mpirun -n 9 --oversubscribe python -m pytest --with-mpi -s
 
       # Test debug mode
       - name: Test Shallow Water Debug
