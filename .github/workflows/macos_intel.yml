@@ -159,7 +159,9 @@ jobs:
 
       # Install Python dependencies
       - name: Install Python dependencies
-        run: pip install -r ./requirements.txt
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          pip install -r ./requirements.txt
 
       # Cache Serialbox
       - name: Cache Serialbox
@@ -203,7 +205,12 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=debug -DCMAKE_PREFIX_PATH='~;~/netcdf;~/openmpi;~/serialbox/install' -DMPIEXEC_PREFLAGS=--oversubscribe -DGT4PY=on ..
           make VERBOSE=1
           ctest --output-on-failure
-          cd ../test/python
+
+      # Test GT4Py implementation
+      - name: Test GT4Py implementation
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          cd test/python
           mpiexec -n 1 --oversubscribe python -m pytest -s
           mpiexec -n 1 --oversubscribe python -m pytest --with-mpi -s
           mpiexec -n 2 --oversubscribe python -m pytest --with-mpi -s

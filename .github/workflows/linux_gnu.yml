@@ -83,7 +83,11 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=debug -DMPIEXEC_PREFLAGS=--oversubscribe -DGT4PY=on ..
           make
           ctest --output-on-failure
-          cd ../test/python
+
+      # Test GT4Py implementation
+      - name: Test GT4Py implementation
+        run: |
+          cd test/python
           mpiexec -n 1 --oversubscribe python -m pytest -s
           mpiexec -n 1 --oversubscribe python -m pytest --with-mpi -s
           mpiexec -n 2 --oversubscribe python -m pytest --with-mpi -s
