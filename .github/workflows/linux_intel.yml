@@ -184,7 +184,10 @@ jobs:
       # Test GT4Py implementation
       - name: Test GT4Py implementation
         run: |
+          source /opt/intel/oneapi/setvars.sh
           cd test/python
+	  which mpirun
+          rm ../test_output/*
           mpirun -n 1 --oversubscribe python -m pytest -s
           mpirun -n 1 --oversubscribe python -m pytest --with-mpi -s
           mpirun -n 2 --oversubscribe python -m pytest --with-mpi -s
