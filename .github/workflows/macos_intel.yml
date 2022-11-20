@@ -54,6 +54,13 @@ jobs:
           cat /opt/intel/oneapi/logs/installer.install.intel.oneapi.mac.hpckit.*
           hdiutil detach /Volumes/$(basename "$MACOS_HPCKIT_URL" .dmg) -quiet
 
+      # Check location of installed Intel compilers
+      - name: Check compiler install
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          which icc
+          which ifort
+
       # Cache OpenMPI
       - name: Cache OpenMPI
         uses: actions/cache@v3
