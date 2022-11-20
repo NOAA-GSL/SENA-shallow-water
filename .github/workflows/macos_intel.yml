@@ -190,23 +190,27 @@ jobs:
           nc-config --version
           nf-config --version
 
-#      # Install Boost (we only need headers so install with homebrew)
-#      - name: Install Boost
-#        run: brew install boost
-#
-#      # Setup Python
-#      - name: Set up Python
-#        uses: actions/setup-python@v4
-#        with:
-#          python-version: '3.9'
-#      - run: python3 --version
-#
-#      # Install Python dependencies
-#      - name: Install Python dependencies
-#        run: |
-#          source /opt/intel/oneapi/setvars.sh
-#          pip3 install -r ./requirements.txt
-#
+      # Install Boost (we only need headers so install with homebrew)
+      - name: Install Boost
+        run: brew install boost
+
+      # Setup Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - run: python3 --version
+
+      # Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          export PATH="${HOME}/openmpi/bin:$PATH"
+          export CC=mpicc
+          export FC=mpif90
+          export CXX=mpicxx
+          pip3 install -r ./requirements.txt
+
 #      # Cache Serialbox
 #      - name: Cache Serialbox
 #        id: cache-serialbox
