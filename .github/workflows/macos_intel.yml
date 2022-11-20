@@ -77,7 +77,7 @@ jobs:
         run: scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_CPP_COMPONENTS
       - name: build
         run: scripts/build_macos.sh c++ $SAMPLES_TAG
-    
+
       - name: prepare for cache restore
         run: |
           sudo mkdir -p /opt/intel
@@ -93,7 +93,7 @@ jobs:
         run: scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_FORTRAN_COMPONENTS
       - name: build
         run: scripts/build_macos.sh fortran $SAMPLES_TAG
-  
+
         # Check location of installed Intel compilers
         - name: Check compiler install
           run: |
