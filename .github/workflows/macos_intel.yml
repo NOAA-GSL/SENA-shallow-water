@@ -68,7 +68,7 @@ jobs:
           sudo chown $USER /opt/intel
       - name: cache install
         id: cache-install
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: /opt/intel/oneapi
           key: install-${{ env.MACOS_HPCKIT_URL }}-${{ env.MACOS_CPP_COMPONENTS }}
@@ -88,6 +88,7 @@ jobs:
         with:
           path: /opt/intel/oneapi
           key: install-${{ env.MACOS_HPCKIT_URL }}-${{ env.MACOS_FORTRAN_COMPONENTS }}
+
 #      - name: install
 #        if: steps.cache-install.outputs.cache-hit != 'true'
 #        run: scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_FORTRAN_COMPONENTS
