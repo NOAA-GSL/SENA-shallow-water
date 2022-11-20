@@ -232,9 +232,6 @@ jobs:
           cd ${HOME}/serialbox
           mkdir build
           cd build
-#          export CC=icc
-#          export FC=ifort
-#          export CXX=icpc
           cmake ../ -DSERIALBOX_ENABLE_FORTRAN=ON
           make
           make install
