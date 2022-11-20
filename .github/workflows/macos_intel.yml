@@ -84,7 +84,7 @@ jobs:
           sudo chown $USER /opt/intel
       - name: cache install
         id: cache-install
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: /opt/intel/oneapi
           key: install-${{ env.MACOS_HPCKIT_URL }}-${{ env.MACOS_FORTRAN_COMPONENTS }}
