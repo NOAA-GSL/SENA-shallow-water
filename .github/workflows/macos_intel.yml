@@ -255,6 +255,7 @@ jobs:
       - name: Test GT4Py implementation
         run: |
           source /opt/intel/oneapi/setvars.sh
+          export PATH="${HOME}/openmpi/bin:$PATH"
           cd test/python
           mpiexec -n 1 --oversubscribe python3 -m pytest -s
           mpiexec -n 1 --oversubscribe python3 -m pytest --with-mpi -s
