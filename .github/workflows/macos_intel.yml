@@ -88,19 +88,18 @@ jobs:
         with:
           path: /opt/intel/oneapi
           key: install-${{ env.MACOS_HPCKIT_URL }}-${{ env.MACOS_FORTRAN_COMPONENTS }}
+      - name: install
+        if: steps.cache-install.outputs.cache-hit != 'true'
+        run: scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_FORTRAN_COMPONENTS
+      - name: build
+        run: scripts/build_macos.sh fortran $SAMPLES_TAG
 
-#      - name: install
-#        if: steps.cache-install.outputs.cache-hit != 'true'
-#        run: scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_FORTRAN_COMPONENTS
-#      - name: build
-#        run: scripts/build_macos.sh fortran $SAMPLES_TAG
-#
-#        # Check location of installed Intel compilers
-#        - name: Check compiler install
-#          run: |
-#            source /opt/intel/oneapi/setvars.sh
-#            which icc
-#            which ifort
+      # Check location of installed Intel compilers
+      - name: Check compiler install
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          which icc
+          which ifort
 
 #      # Cache OpenMPI
 #      - name: Cache OpenMPI
