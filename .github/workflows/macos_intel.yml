@@ -18,7 +18,15 @@ jobs:
     runs-on: macos-latest
 
     env:
-      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17643/m_HPCKit_p_2021.2.0.2903_offline.dmg
+#      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17643/m_HPCKit_p_2021.2.0.2903_offline.dmg
+      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18977/m_HPCKit_p_2022.3.1.15344_offline.dmg
+      MACOS_CPP_COMPONENTS: intel.oneapi.mac.cpp-compiler
+      MACOS_FORTRAN_COMPONENTS: intel.oneapi.mac.ifort-compiler
+      CACHE_NUMBER: 4
+      SAMPLES_TAG: 2022.3.0
+      COMPILER_VERSION: 2022.2.1
+      TBB_VERSION: 2021.7.1
+      VS_VER: vs2022
       CC: icc
       FC: ifort
       CXX: icpc
@@ -30,36 +38,68 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Prepare for Intel cache restore
-      - name: Prepare for Intel cache restore
+#      # Prepare for Intel cache restore
+#      - name: Prepare for Intel cache restore
+#        run: |
+#          sudo mkdir -p /opt/intel
+#          sudo chown $USER /opt/intel
+#
+#      # Cache Intel HPC Toolkit
+#      - name: Cache Intel HPC Toolkit
+#        id: cache-intel-hpc-toolkit
+#        uses: actions/cache@v3
+#        with:
+#          path: /opt/intel/oneapi
+#          key: install-${{ env.MACOS_HPCKIT_URL }}-all
+#
+#      # Install Intel HPC Toolkit
+#      - name: Install Intel HPC Toolkit
+#        if: steps.cache-intel-hpc-toolkit.outputs.cache-hit != 'true'
+#        run: |
+#          curl --output webimage.dmg --url "$MACOS_HPCKIT_URL" --retry 5 --retry-delay 5
+#          hdiutil attach webimage.dmg
+#          sudo /Volumes/$(basename $MACOS_HPCKIT_URL .dmg)/bootstrapper.app/Contents/MacOS/bootstrapper -s --action install --components=all --eula=accept --continue-with-optional-error=yes --log-dir=.
+#          cat /opt/intel/oneapi/logs/installer.install.intel.oneapi.mac.hpckit.*
+#          hdiutil detach /Volumes/$(basename "$MACOS_HPCKIT_URL" .dmg) -quiet
+
+      - name: prepare for cache restore
         run: |
           sudo mkdir -p /opt/intel
           sudo chown $USER /opt/intel
-
-      # Cache Intel HPC Toolkit
-      - name: Cache Intel HPC Toolkit
-        id: cache-intel-hpc-toolkit
-        uses: actions/cache@v3
+      - name: cache install
+        id: cache-install
+        uses: actions/cache@v2
         with:
           path: /opt/intel/oneapi
-          key: install-${{ env.MACOS_HPCKIT_URL }}-all
-
-      # Install Intel HPC Toolkit
-      - name: Install Intel HPC Toolkit
-        if: steps.cache-intel-hpc-toolkit.outputs.cache-hit != 'true'
+          key: install-${{ env.MACOS_HPCKIT_URL }}-${{ env.MACOS_CPP_COMPONENTS }}
+      - name: install
+        if: steps.cache-install.outputs.cache-hit != 'true'
+        run: scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_CPP_COMPONENTS
+      - name: build
+        run: scripts/build_macos.sh c++ $SAMPLES_TAG
+    
+      - name: prepare for cache restore
         run: |
-          curl --output webimage.dmg --url "$MACOS_HPCKIT_URL" --retry 5 --retry-delay 5
-          hdiutil attach webimage.dmg
-          sudo /Volumes/$(basename $MACOS_HPCKIT_URL .dmg)/bootstrapper.app/Contents/MacOS/bootstrapper -s --action install --components=all --eula=accept --continue-with-optional-error=yes --log-dir=.
-          cat /opt/intel/oneapi/logs/installer.install.intel.oneapi.mac.hpckit.*
-          hdiutil detach /Volumes/$(basename "$MACOS_HPCKIT_URL" .dmg) -quiet
-
-      # Check location of installed Intel compilers
-      - name: Check compiler install
-        run: |
-          source /opt/intel/oneapi/setvars.sh
-          which icc
-          which ifort
+          sudo mkdir -p /opt/intel
+          sudo chown $USER /opt/intel
+      - name: cache install
+        id: cache-install
+        uses: actions/cache@v2
+        with:
+          path: /opt/intel/oneapi
+          key: install-${{ env.MACOS_HPCKIT_URL }}-${{ env.MACOS_FORTRAN_COMPONENTS }}
+      - name: install
+        if: steps.cache-install.outputs.cache-hit != 'true'
+        run: scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_FORTRAN_COMPONENTS
+      - name: build
+        run: scripts/build_macos.sh fortran $SAMPLES_TAG
+  
+        # Check location of installed Intel compilers
+        - name: Check compiler install
+          run: |
+            source /opt/intel/oneapi/setvars.sh
+            which icc
+            which ifort
 
 #      # Cache OpenMPI
 #      - name: Cache OpenMPI
