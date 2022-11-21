@@ -9,7 +9,7 @@ on:
 
 defaults:
   run:
-    shell: bash -leo pipefail {0}
+    shell: bash -eo pipefail {0}
 
 jobs:
 
@@ -17,7 +17,7 @@ jobs:
     name: MacOS Intel Build with OpenMPI
     runs-on: macos-latest
     env:
-      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17643/m_HPCKit_p_2021.2.0.2903_offline.dmg
+      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18977/m_HPCKit_p_2022.3.1.15344_offline.dmg
       CC: icc
       FC: ifort
       CXX: icpc
@@ -26,6 +26,10 @@ jobs:
       OMPI_MCA_btl: "self,tcp"
 
     steps:
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
       # Prepare for Intel cache restore
       - name: Prepare for Intel cache restore
         run: |
@@ -155,7 +159,17 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-      - run: python --version
+      - run: python3 --version
+
+      # Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          export PATH="${HOME}/openmpi/bin:$PATH"
+          export CC=mpicc
+          export FC=mpif90
+          export CXX=mpicxx
+          pip3 install -r ./requirements.txt
 
       # Cache Serialbox
       - name: Cache Serialbox
@@ -170,26 +184,17 @@ jobs:
         if: steps.cache-serialbox.outputs.cache-hit != 'true'
         run: |
           source /opt/intel/oneapi/setvars.sh
+          export PATH="${HOME}/openmpi/bin:$PATH"
+          export CC=mpicc
+          export FC=mpif90
+          export CXX=mpicxx
           git clone https://github.com/eth-cscs/serialbox2.git ${HOME}/serialbox
           cd ${HOME}/serialbox
           mkdir build
           cd build
-          XCODE_PATH=$(xcode-select -p)
-          XCODE_HEADERS=${XCODE_PATH}/SDKs/MacOSX.sdk/usr/include
-          XCODE_FRAMEWORK=${XCODE_PATH}/SDKs/MacOSX.sdk/System/Library/Frameworks
-          export C_INCLUDE_PATH+=:${XCODE_PATH}/SDKs/MacOSX.sdk/usr/include
-          export CPLUS_INCLUDE_PATH+=:${XCODE_PATH}/SDKs/MacOSX.sdk/usr/include
-          export LIBRARY_PATH+=:${XCODE_PATH}/SDKs/MacOSX.sdk/usr/lib
-          export CC=icc
-          export FC=ifort
-          export CXX=icpc
           cmake ../ -DSERIALBOX_ENABLE_FORTRAN=ON
           make
           make install
-
-      # Checkout repository
-      - name: Checkout repository
-        uses: actions/checkout@v2
 
       # Test GT4Py option
       - name: Test GT4Py option
@@ -205,6 +210,18 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=debug -DCMAKE_PREFIX_PATH='~;~/netcdf;~/openmpi;~/serialbox/install' -DMPIEXEC_PREFLAGS=--oversubscribe -DGT4PY=on ..
           make VERBOSE=1
           ctest --output-on-failure
+
+      # Test GT4Py implementation
+      - name: Test GT4Py implementation
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          export PATH="${HOME}/openmpi/bin:$PATH"
+          cd test/python
+          mpiexec -n 1 --oversubscribe python3 -m pytest -s
+          mpiexec -n 1 --oversubscribe python3 -m pytest --with-mpi -s
+          mpiexec -n 2 --oversubscribe python3 -m pytest --with-mpi -s
+          mpiexec -n 4 --oversubscribe python3 -m pytest --with-mpi -s
+          mpiexec -n 9 --oversubscribe python3 -m pytest --with-mpi -s
 
       # Test debug mode
       - name: Test Shallow Water Debug

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """Main driver for the Shallow Water Model."""
 
 import argparse
@@ -28,7 +30,6 @@ def run_shallow_water(config_file: str, filename=None):
 
     # Read the configuration settings from config file
     with open(config_file, "r") as yamlFile: 
-        # config = yaml.safe_load(f)
         try:
             config = yaml.full_load(yamlFile)
         except yaml.YAMLError as e:
@@ -61,13 +62,13 @@ def run_shallow_water(config_file: str, filename=None):
 
     # Write out the initial state if needed
     if (runtime['output_interval_steps'] <= runtime['run_steps'] and filename is None):
-        s.write(f"../../test/test_output/swout_{round(s.clock / m.dt):07d}.nc")
+        s.write(f"swout_{round(s.clock / m.dt):07d}.nc")
 
     # Run the model
     for t in range(0, runtime['run_steps'], runtime['output_interval_steps']):
         m.adv_nsteps(s, min(runtime['output_interval_steps'], runtime['run_steps'] - t))
         if (runtime['output_interval_steps']):
-            s.write(f"../../test/test_output/swout_{round(s.clock / m.dt):07d}.nc")
+            s.write(f"swout_{round(s.clock / m.dt):07d}.nc")
         print(f"t = {t}")
 
 

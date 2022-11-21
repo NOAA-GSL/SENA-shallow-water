@@ -24,6 +24,10 @@ jobs:
       CXX: icpc
 
     steps:
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
       # Cache Intel HPC Toolkit
       - name: Cache Intel HPC Toolkit
         id: cache-intel-hpc-toolkit
@@ -125,6 +129,12 @@ jobs:
         with:
           python-version: '3.9' 
 
+      # Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          pip install -r ${GITHUB_WORKSPACE}/requirements.txt
+
       # Cache Serialbox
       - name: Cache Serialbox
         id: cache-serialbox
@@ -148,10 +158,6 @@ jobs:
           make
           make install
 
-      # Checkout repository
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
       # Test GT4Py option
       - name: Test GT4Py option
         run: |
@@ -164,6 +170,17 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=debug -DCMAKE_PREFIX_PATH='~;~/netcdf;~/boost;~/serialbox/install' -DGT4PY=on ..
           make
           ctest --output-on-failure
+
+      # Test GT4Py implementation
+      - name: Test GT4Py implementation
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          cd test/python
+          mpiexec -n 1 python -m pytest -s
+          mpiexec -n 1 python -m pytest --with-mpi -s
+          mpiexec -n 2 python -m pytest --with-mpi -s
+          mpiexec -n 4 python -m pytest --with-mpi -s
+          mpiexec -n 9 python -m pytest --with-mpi -s
 
       # Test debug mode
       - name: Test Shallow Water Debug
