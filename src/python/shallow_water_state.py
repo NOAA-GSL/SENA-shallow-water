@@ -467,11 +467,11 @@ class ShallowWaterState:
 
             # Get the u, v, h
             _u_full = np.empty((_nx, _ny))
-            _u_full[:,:] = _dataset.variables["U"][:,:]
+            _u_full[:,:] = np.transpose(_dataset.variables["U"][:,:])
             _v_full = np.empty((_nx, _ny))
-            _v_full[:,:] = _dataset.variables["V"][:,:]
+            _v_full[:,:] = np.transpose(_dataset.variables["V"][:,:])
             _h_full = np.empty((_nx, _ny))
-            _h_full[:,:] = _dataset.variables["H"][:,:]
+            _h_full[:,:] = np.transpose(_dataset.variables["H"][:,:])
 
         else:
             _u_full = np.empty(1)
