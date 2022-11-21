@@ -38,8 +38,6 @@ def plot_animation(config_file: str, filename=None):
 
     comm = MPI.COMM_WORLD
 
-    # config_file = "../../parm/shallow_water_test.yml"
-
     def animate(n):
         m.adv_nsteps(s, 1)
         pc.set_array(s.h.data)
@@ -114,3 +112,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

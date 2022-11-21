@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """Main driver for the Shallow Water Model."""
 
 import argparse
