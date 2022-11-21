@@ -51,6 +51,10 @@ jobs:
           python-version: '3.9' 
       - run: python --version
 
+      # Install Python dependencies
+      - name: Install Python dependencies
+        run: pip install -r ./requirements.txt
+
       # Install Serialbox
       - name: Install Serialbox
         run: |
@@ -75,6 +79,16 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=debug -DMPIEXEC_PREFLAGS=--oversubscribe -DGT4PY=on ..
           make
           ctest --output-on-failure
+
+      # Test GT4Py implementation
+      - name: Test GT4Py implementation
+        run: |
+          cd test/python
+          mpiexec -n 1 --oversubscribe python -m pytest -s
+          mpiexec -n 1 --oversubscribe python -m pytest --with-mpi -s
+          mpiexec -n 2 --oversubscribe python -m pytest --with-mpi -s
+          mpiexec -n 4 --oversubscribe python -m pytest --with-mpi -s
+          mpiexec -n 9 --oversubscribe python -m pytest --with-mpi -s
 
       # Test debug mode 
       - name: Test Shallow Water Debug 

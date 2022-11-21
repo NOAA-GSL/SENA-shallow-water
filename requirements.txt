@@ -1,0 +1,6 @@
+git+https://github.com/GridTools/gt4py.git@d0908cd8b1512d216dc29633bcd16638dbd71843#egg=gt4py
+pytest
+pytest-mpi
+pyyaml
+netCDF4
+mpi4py
