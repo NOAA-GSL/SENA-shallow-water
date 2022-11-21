@@ -355,6 +355,19 @@ class ShallowWaterState:
         return _u_full, _v_full, _h_full
 
 
+    # Get state u 
+    def get_u(self):
+        return self.u[self.geometry.xps - self.geometry.xms:self.geometry.xpe - self.geometry.xms+1, self.geometry.yps - self.geometry.yms:self.geometry.ype - self.geometry.yms+1]
+        
+    # Get state v 
+    def get_v(self):
+        return self.v[self.geometry.xps - self.geometry.xms:self.geometry.xpe - self.geometry.xms+1, self.geometry.yps - self.geometry.yms:self.geometry.ype - self.geometry.yms+1]
+
+    # Get state h
+    def get_h(self):
+        return self.h[self.geometry.xps - self.geometry.xms:self.geometry.xpe - self.geometry.xms+1, self.geometry.yps - self.geometry.yms:self.geometry.ype - self.geometry.yms+1]
+
+
     def write(self, filename):
 
         from netCDF4 import Dataset
