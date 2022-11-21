@@ -174,12 +174,6 @@ jobs:
           cd ${HOME}/serialbox
           mkdir build
           cd build
-          XCODE_PATH=$(xcode-select -p)
-          XCODE_HEADERS=${XCODE_PATH}/SDKs/MacOSX.sdk/usr/include
-          XCODE_FRAMEWORK=${XCODE_PATH}/SDKs/MacOSX.sdk/System/Library/Frameworks
-          export C_INCLUDE_PATH+=:${XCODE_PATH}/SDKs/MacOSX.sdk/usr/include
-          export CPLUS_INCLUDE_PATH+=:${XCODE_PATH}/SDKs/MacOSX.sdk/usr/include
-          export LIBRARY_PATH+=:${XCODE_PATH}/SDKs/MacOSX.sdk/usr/lib
           export CC=icc
           export FC=ifort
           export CXX=icpc

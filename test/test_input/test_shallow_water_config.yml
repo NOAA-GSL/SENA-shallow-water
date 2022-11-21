@@ -11,12 +11,6 @@ model:
   b0: 4.0
   h0: 5.0
 
-runtime:
- start_step: 0
- run_steps: 10
- output_interval_steps: 5
- io_format: "NETCDF"
-
 gt4py: 
   backend: 'numpy'
   float_type: !!python/name:numpy.float64
