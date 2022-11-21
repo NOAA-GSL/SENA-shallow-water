@@ -16,12 +16,12 @@ jobs:
   macos_build:
     name: MacOS Intel Build with OpenMPI
     runs-on: macos-latest
-
     env:
       MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18977/m_HPCKit_p_2022.3.1.15344_offline.dmg
       CC: icc
       FC: ifort
       CXX: icpc
+
       # Work around bug in OpenMPI: See https://github.com/open-mpi/ompi/issues/6518
       OMPI_MCA_btl: "self,tcp"
 
