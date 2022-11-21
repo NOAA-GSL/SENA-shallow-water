@@ -33,62 +33,6 @@ class ColormapNormalize(colors.Normalize):
 
         return np.interp(value, x, y, left=-np.inf, right=np.inf)
 
-<<<<<<< HEAD
-comm = MPI.COMM_WORLD
-
-config_file = "../../parm/shallow_water.yml"
-
-# Create the geometry
-gc = ShallowWaterGeometryConfig.from_YAML_filename(config_file)
-g = ShallowWaterGeometry(gc, comm)
-
-# Create the model
-mc = ShallowWaterModelConfig.from_YAML_filename(config_file)
-gtc = ShallowWaterGT4PyConfig.from_YAML_filename(config_file)
-m = ShallowWaterModel(mc, gtc, g)
-
-# Get the runtime config
-import yaml
-with open(config_file, 'r') as yamlFile:
-    try:
-        config = yaml.full_load(yamlFile)
-    except yaml.YAMLError as e:
-        print(e)
-runtime = config['runtime']
-
-# If this is a restart, initialze model from restart file
-if (runtime['start_step'] != 0):
-
-    # Initialize a default state
-    s = ShallowWaterState(g, gtc)
-
-    # Read restart file into state
-    s.read(f"swout_{runtime['start_step']:07d}.nc")
-
-# Otherwise create a new model from the configuration
-else:
-
-    # Create a state with a tsunami pulse in it to initialize field h
-    h = np.empty((g.npx, g.npy), dtype=float)
-    xmid = g.xmax / 2.0
-    ymid = g.ymax / 2.0
-    sigma = np.floor(g.xmax / 20.0)
-    for i in range(g.xps, g.xpe + 1):
-        for j in range(g.yps, g.ype + 1):
-            dsqr = ((i-1) * g.dx - xmid)**2 + ((j-1) * g.dy - ymid)**2
-            h[i - g.xps,j - g.yps] = 5000.0 + np.exp(-dsqr / sigma**2) * (mc.h0 - 5000.0)
-    s = ShallowWaterState(g, gtc, h=h)
-
-## Plot animation
-X, Y = np.meshgrid(np.linspace(0, g.xmax, g.npx), np.linspace(0, g.ymax, g.npy))
-fig, axs = plt.subplots()
-norm = ColormapNormalize(vmin=4990, vmax=5030, v1=4995, v2=5005)
-pc = axs.pcolormesh(X, Y, s.h.data, cmap='nipy_spectral', norm=norm)
-cb = fig.colorbar(pc, ax=axs, extend='both')
-cb.set_ticks([4990, 4995, 4996, 4997, 4998, 4999, 5000, 5001, 5002, 5003, 5004, 5005, 5030])
-anim = animation.FuncAnimation(fig, animate, interval=125, frames=runtime['run_steps'])
-anim.save('../../test/test_output/test.gif')
-=======
 
 def plot_animation(config_file: str, filename=None):
 
@@ -169,4 +113,3 @@ def main():
 if __name__ == "__main__":
     main()
 
->>>>>>> develop
