@@ -154,9 +154,12 @@ def test_shallow_water_state_write(input_io_geometry, input_gt4py_config):
     yms = input_io_geometry.yms
     yme = input_io_geometry.yme
     clock = 1000.0
-    u = np.full((npx, npy), 5.0)
-    v = np.full((npx, npy), 6.0)
-    h = np.full((npx, npy), 7.0)
+    u = np.zeros((npx, npy))
+    v = np.zeros((npx, npy))
+    h = np.zeros((npx, npy))
+    for i in range(npx):
+        for j in range(npy):
+            u[i,j] = i
 
     state = ShallowWaterState(input_io_geometry, input_gt4py_config, u=u, v=v, h=h, clock=clock)
     state.write("../test_output/test_shallow_water_writer.nc")

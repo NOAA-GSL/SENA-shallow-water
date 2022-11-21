@@ -409,13 +409,13 @@ class ShallowWaterState:
             _yVar.units = "Nondimensional"
 
             # Define the u/v/h variables
-            _uVar = _dataset.createVariable("U", "f8", (_nxDim, _nyDim))
+            _uVar = _dataset.createVariable("U", "f8", (_nyDim, _nxDim))
             _uVar.long_name = "Zonal Velocity"
             _uVar.units = "m / s"
-            _vVar = _dataset.createVariable("V", "f8", (_nxDim, _nyDim))
+            _vVar = _dataset.createVariable("V", "f8", (_nyDim, _nxDim))
             _vVar.long_name = "Meridional Velocity"
             _vVar.units = "m / s"
-            _hVar = _dataset.createVariable("H", "f8", (_nxDim, _nyDim))
+            _hVar = _dataset.createVariable("H", "f8", (_nyDim, _nxDim))
             _hVar.long_name = "Pressure Surface Height"
             _hVar.units = "m"
 
@@ -430,9 +430,9 @@ class ShallowWaterState:
                 _yVar[i] = i * _dy
 
             # Fill the u, v, h variables
-            _uVar[:,:] = _u_full[:,:]
-            _vVar[:,:] = _v_full[:,:]
-            _hVar[:,:] = _h_full[:,:]
+            _uVar[:,:] = np.transpose(_u_full[:,:])
+            _vVar[:,:] = np.transpose(_v_full[:,:])
+            _hVar[:,:] = np.transpose(_h_full[:,:])
 
             # Close the NetCDF file
             _dataset.close()
@@ -467,11 +467,11 @@ class ShallowWaterState:
 
             # Get the u, v, h
             _u_full = np.empty((_nx, _ny))
-            _u_full[:,:] = _dataset.variables["U"][:,:]
+            _u_full[:,:] = np.transpose(_dataset.variables["U"][:,:])
             _v_full = np.empty((_nx, _ny))
-            _v_full[:,:] = _dataset.variables["V"][:,:]
+            _v_full[:,:] = np.transpose(_dataset.variables["V"][:,:])
             _h_full = np.empty((_nx, _ny))
-            _h_full[:,:] = _dataset.variables["H"][:,:]
+            _h_full[:,:] = np.transpose(_dataset.variables["H"][:,:])
 
         else:
             _u_full = np.empty(1)
