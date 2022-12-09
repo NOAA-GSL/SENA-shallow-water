@@ -9,6 +9,9 @@
 .gt_cache
 __pycache__
 
+# Ignore Serialbox data
+serialbox_data/
+
 # Ignore Direnv and env dot files
 *.envrc
 *.direnv
