@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17764/l_HPCKit_p_2021.2.0.2997_offline.sh
+      LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18975/l_HPCKit_p_2022.3.1.16997_offline.sh
       CC: icc
       FC: ifort
       CXX: icpc
@@ -45,7 +45,7 @@ jobs:
           ./webimage.sh -x -f webimage_extracted --log extract.log
           rm -rf webimage.sh
           WEBIMAGE_NAME=$(ls -1 webimage_extracted/)
-          sudo webimage_extracted/"$WEBIMAGE_NAME"/bootstrapper -s --action install --components=all --eula=accept --continue-with-optional-error=yes --log-dir=.
+          sudo webimage_extracted/"$WEBIMAGE_NAME"/bootstrapper -s --action install --components=all --eula=accept --log-dir=.
           cat /opt/intel/oneapi/logs/installer.install.intel.oneapi.lin.hpckit.*
           rm -rf webimage_extracted
 
@@ -70,8 +70,8 @@ jobs:
         run: |
           source /opt/intel/oneapi/setvars.sh
           export CC=mpiicc
-          export FC=mpif90
-          export CXX=mpicxx
+          export FC=mpiifort
+          export CXX=mpiicpc
           wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.7/src/hdf5-1.10.7.tar.gz &> /dev/null
           tar -xzf hdf5-1.10.7.tar.gz
           pushd hdf5-1.10.7
