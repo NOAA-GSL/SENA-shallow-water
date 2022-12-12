@@ -286,7 +286,7 @@ $ make install
 
 ```bash 
 $ cd src/python
-$ ../../exe/shallow_water_serialize.x ../../parm/shallow_water.nl
+$ mpiexec -n 1 ../../exe/shallow_water_serialize.x ../../parm/shallow_water.nl
 ```
 
 6) After installation of the Python Version requirements, execute the Python script to compare the Fortran Serialbox output with the GT4Py implementation. The `parm/shallow_water.yml` used in the script provides the same configuration as the `parm/shallow_water.nl` used to run the model on the Fortran side. 
@@ -295,7 +295,7 @@ Validate against the Fortran implementation by running the following script:
 
 ```bash
 $ cd src/python
-$ python shallow_water_serialize.py
+$ mpiexec -n 1 python -m shallow_water_serialize ../../parm/shallow_water.yml
 ```
 
 ## nccmp
