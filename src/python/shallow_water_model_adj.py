@@ -310,9 +310,27 @@ class ShallowWaterModelADJ:
                         v = v + tempb7 + tempb8
                         h = h + tempb3 + tempb + tempb11
 
+        # Define state copy update stencil function
+        def copy_update(u     : self.field_type,
+                        v     : self.field_type,
+                        h     : self.field_type,
+                        u_new : self.field_type,
+                        v_new : self.field_type,
+                        h_new : self.field_type):
+            # NOTE: FORWARD ordering is required here to disambiguate the missing k dimension
+            #       for assignment into our 2D arrays.
+            with computation(FORWARD), interval(...):
+                u_new = u
+                v_new = v
+                h_new = h
+                u = 0.0
+                v = 0.0
+                h = 0.0
+
         # Compile the stenci functions for the given backend
         self._boundary_update = gtscript.stencil(definition=boundary_update, backend=self.backend)
         self._interior_update = gtscript.stencil(definition=interior_update, backend=self.backend)
+        self._copy_update = gtscript.stencil(definition=copy_update, backend=self.backend)
 
 
     def adv_nsteps(self, state : ShallowWaterState, trajectory: ShallowWaterState, nsteps : int):
@@ -331,12 +349,24 @@ class ShallowWaterModelADJ:
         _dtdx = self.dt / _dx
         _dtdy = self.dt / _dy
 
+        # Get local bounds exluding the halo
+        _xps = self.geometry.xps
+        _xpe = self.geometry.xpe
+        _yps = self.geometry.yps
+        _ype = self.geometry.ype
+
+        # Get local bounds including halo
+        _xms = self.geometry.xms
+        _xme = self.geometry.xme
+        _yms = self.geometry.yms
+        _yme = self.geometry.yme
+
         # Create gt4py storages for the new model state
-        _u_new = gt_storage.empty(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
+        _u_new = gt_storage.empty(shape=(_xme - _xms + 1, _yme - _yms + 1),
                                    dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
-        _v_new = gt_storage.empty(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
+        _v_new = gt_storage.empty(shape=(_xme - _xms + 1, _yme - _yms + 1),
                                    dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
-        _h_new = gt_storage.empty(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
+        _h_new = gt_storage.empty(shape=(_xme - _xms + 1, _yme - _yms + 1),
                                    dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
 
         for n in range(nsteps):
@@ -345,14 +375,14 @@ class ShallowWaterModelADJ:
             trajectory.exchange_halo()
 
             # Adjoint of update state with new state
-            for i in range(self.geometry.xms - self.geometry.xms, self.geometry.xme - self.geometry.xms + 1):
-                for j in range(self.geometry.yms - self.geometry.yms, self.geometry.yme - self.geometry.yms + 1):
-                    _h_new[i,j] = state.h[i,j]
-                    _v_new[i,j] = state.v[i,j]
-                    _u_new[i,j] = state.u[i,j]
-                    state.h[i,j] = 0.0
-                    state.v[i,j] = 0.0
-                    state.u[i,j] = 0.0
+            self._copy_update(u = state.u,
+                              v = state.v,
+                              h = state.h,
+                              u_new = _u_new,
+                              v_new = _v_new,
+                              h_new = _h_new,
+                              origin=(0, 0),
+                              domain=(_xme - _xms + 1, _yme - _yms + 1, 1))
 
             # Get new interior points
             self._interior_update(u=state.u,
@@ -372,7 +402,7 @@ class ShallowWaterModelADJ:
                                   dtdx=_dtdx,
                                   dtdy=_dtdy,
                                   origin=(0, 0),
-                                  domain=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1, 1))
+                                  domain=(_xme - _xms + 1, _yme - _yms + 1, 1))
 
             # Get new boundaries
             self._boundary_update(u=state.u,
@@ -391,7 +421,7 @@ class ShallowWaterModelADJ:
                                   dtdx=_dtdx,
                                   dtdy=_dtdy,
                                   origin=(0, 0),
-                                  domain=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1, 1))
+                                  domain=(_xme - _xms + 1, _yme - _yms + 1, 1))
 
             # Update the clock
             state.advance_clock(-self.dt)

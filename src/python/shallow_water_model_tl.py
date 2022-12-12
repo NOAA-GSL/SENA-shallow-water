@@ -111,9 +111,24 @@ class ShallowWaterModelTL:
                         - 0.5 * dtdy * (h * (traj_v[0,1] - traj_v[0,-1]) + (traj_h   \
                         - b) * (v[0,1] - v[0,-1]))
 
+        # Define state copy update stencil function
+        def copy_update(u     : self.field_type,
+                        v     : self.field_type,
+                        h     : self.field_type,
+                        u_new : self.field_type,
+                        v_new : self.field_type,
+                        h_new : self.field_type):
+            # NOTE: FORWARD ordering is required here to disambiguate the missing k dimension
+            #       for assignment into our 2D arrays.
+            with computation(FORWARD), interval(...):
+                u = u_new
+                v = v_new
+                h = h_new
+
         # Compile the stenci functions for the given backend
         self._boundary_update = gtscript.stencil(definition=boundary_update, backend=self.backend)
         self._interior_update = gtscript.stencil(definition=interior_update, backend=self.backend)
+        self._copy_update = gtscript.stencil(definition=copy_update, backend=self.backend)
 
 
     def adv_nsteps(self, state : ShallowWaterState, trajectory: ShallowWaterState, nsteps : int):
@@ -121,6 +136,24 @@ class ShallowWaterModelTL:
         # Get grid spacing
         _dx = self.geometry.dx
         _dy = self.geometry.dy
+
+        # Get local bounds exluding the halo
+        _xps = self.geometry.xps
+        _xpe = self.geometry.xpe
+        _yps = self.geometry.yps
+        _ype = self.geometry.ype
+
+        # Get local interior points
+        _xts = self.geometry.xts
+        _xte = self.geometry.xte
+        _yts = self.geometry.yts
+        _yte = self.geometry.yte
+
+        # Get local bounds including halo
+        _xms = self.geometry.xms
+        _xme = self.geometry.xme
+        _yms = self.geometry.yms
+        _yme = self.geometry.yme
 
         # Sanity check for timestep
         if (state.max_wavespeed > 0.0):
@@ -133,12 +166,12 @@ class ShallowWaterModelTL:
         _dtdy = self.dt / _dy
 
         # Create gt4py storages for the new model state
-        _u_new = gt_storage.empty(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                   dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
-        _v_new = gt_storage.empty(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                   dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
-        _h_new = gt_storage.empty(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                   dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
+        _u_new = gt_storage.empty(shape=(_xme - _xms + 1, _yme -_yms + 1),
+                                  dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
+        _v_new = gt_storage.empty(shape=(_xme - _xms + 1, _yme -_yms + 1),
+                                  dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
+        _h_new = gt_storage.empty(shape=(_xme - _xms + 1, _yme -_yms + 1),
+                                  dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
 
         for n in range(nsteps):
             # Exchange halo
@@ -162,7 +195,7 @@ class ShallowWaterModelTL:
                                   dtdx=_dtdx,
                                   dtdy=_dtdy,
                                   origin=(0, 0),
-                                  domain=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1, 1))
+                                  domain=(_xme - _xms + 1, _yme -_yms + 1, 1))
 
             # Get new interior points
             self._interior_update(u=state.u,
@@ -178,14 +211,17 @@ class ShallowWaterModelTL:
                                   dtdx=_dtdx,
                                   dtdy=_dtdy,
                                   origin=(1, 1),
-                                  domain=(self.geometry.xte - self.geometry.xts + 1, self.geometry.yte - self.geometry.yts + 1, 1))
+                                  domain=(_xte - _xts + 1, _yte - _yts + 1, 1))
 
             # Update state with new state
-            for i in range(self.geometry.xps - self.geometry.xms, self.geometry.xpe - self.geometry.xms + 1):
-                for j in range(self.geometry.yps - self.geometry.yms, self.geometry.ype - self.geometry.yms + 1):
-                    state.u[i,j] = _u_new[i,j]
-                    state.v[i,j] = _v_new[i,j]
-                    state.h[i,j] = _h_new[i,j]
+            self._copy_update(u = state.u,
+                              v = state.v,
+                              h = state.h,
+                              u_new = _u_new,
+                              v_new = _v_new,
+                              h_new = _h_new,
+                              origin=(_xps - _xms, _yps - _yms),
+                              domain=(_xpe - _xps + 1, _ype - _yps + 1, 1))
 
             # Update the clock
             state.advance_clock(self.dt)
