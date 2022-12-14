@@ -18,12 +18,12 @@ class ShallowWaterModelADJ:
         self.float_type = self.gt4PyConfig.float_type
         self.field_type = gtscript.Field[gtscript.IJ, self.float_type]
 
+        # Set gravitational acceleration constant
+        g = 9.81
+
         # Initialize the b array - Currently unused
         self.b = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
                                   dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
-
-        # Set gravitational acceleration constant
-        g = 9.81
 
         # Define boundary_update stencil function
         def boundary_update(u      : self.field_type,
@@ -116,6 +116,9 @@ class ShallowWaterModelADJ:
                             dtdy   : self.float_type):
             # NOTE: FORWARD ordering is required here to disambiguate the missing k dimension
             #       for assignment into our 2D arrays.
+
+            from __externals__ import g
+
             with computation(FORWARD), interval(...):
 
                 # Take care of our northern neighbor's southernmost j-1
@@ -328,8 +331,9 @@ class ShallowWaterModelADJ:
                 h = 0.0
 
         # Compile the stenci functions for the given backend
+        opts: Dict[str, Any] = {"externals": {"g": self.g}}
         self._boundary_update = gtscript.stencil(definition=boundary_update, backend=self.backend)
-        self._interior_update = gtscript.stencil(definition=interior_update, backend=self.backend)
+        self._interior_update = gtscript.stencil(definition=interior_update, backend=self.backend, **opts)
         self._copy_update = gtscript.stencil(definition=copy_update, backend=self.backend)
 
 
