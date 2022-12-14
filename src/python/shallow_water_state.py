@@ -1,5 +1,6 @@
 import numpy as np
 from mpi4py import MPI
+import gt4py.gtscript as gtscript
 import gt4py.storage as gt_storage
 
 from shallow_water_gt4py_config import ShallowWaterGT4PyConfig
@@ -18,6 +19,7 @@ class ShallowWaterState:
         # Set the config for use in GT4Py storage creation
         self.backend = config.backend
         self.float_type = config.float_type
+        self.field_type = gtscript.Field[gtscript.IJ, self.float_type]
 
         # Initialize u
         self.u = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
@@ -55,6 +57,26 @@ class ShallowWaterState:
         else:
             self.clock = 0.0
 
+        # Allocate send/recv buffers for halo exchanges
+        self._nsendbuffer = gt_storage.zeros(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+        self._ssendbuffer = gt_storage.zeros(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+        self._wsendbuffer = gt_storage.zeros(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+        self._esendbuffer = gt_storage.zeros(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+        self._nrecvbuffer = gt_storage.zeros(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+        self._srecvbuffer = gt_storage.zeros(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+        self._wrecvbuffer = gt_storage.zeros(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+        self._erecvbuffer = gt_storage.zeros(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+
+        # Define copy stencil for packing/unpacking halo exchange buffers
+        def copy_vector(inField: self.field_type,
+                        outField: self.field_type):
+            #    # NOTE: FORWARD ordering is required here to disambiguate the missing k dimension
+            #    #       for assignment into our 2D arrays.
+            with computation(FORWARD), interval(...):
+                outField = inField
+
+        self._copy_vector = gtscript.stencil(definition=copy_vector, backend=self.backend)
+
     # Send boundaries to neighboring halos for each process
     def exchange_halo(self):
 
@@ -90,67 +112,49 @@ class ShallowWaterState:
         # Post the non-blocking receive half of the exhange first to reduce overhead
         _nrequests = 0
         _irequests = []
-        _nrecvbuffer = np.zeros((_npx, 3))
         if (_north != -1):
-            _irequests.append(_communicator.Irecv(_nrecvbuffer, _north, _stag))
+            _irequests.append(_communicator.Irecv(np.ascontiguousarray(self._nrecvbuffer), _north, _stag))
             _nrequests = _nrequests + 1
-
-        _srecvbuffer = np.zeros((_npx, 3))
         if (_south != -1):
-            _irequests.append(_communicator.Irecv(_srecvbuffer, _south, _ntag))
+            _irequests.append(_communicator.Irecv(np.ascontiguousarray(self._srecvbuffer), _south, _ntag))
             _nrequests = _nrequests + 1
-
-        _wrecvbuffer = np.zeros((_npy, 3))
         if (_west != -1):
-            _irequests.append(_communicator.Irecv(_wrecvbuffer, _west, _etag))
+            _irequests.append(_communicator.Irecv(np.ascontiguousarray(self._wrecvbuffer), _west, _etag))
             _nrequests = _nrequests + 1
-
-        _erecvbuffer = np.zeros((_npy, 3))
         if (_east != -1):
-            _irequests.append(_communicator.Irecv(_erecvbuffer, _east, _wtag))
+            _irequests.append(_communicator.Irecv(np.ascontiguousarray(self._erecvbuffer), _east, _wtag))
             _nrequests = _nrequests + 1
 
         # Pack the send buffers
-        _nsendbuffer = np.zeros((_npx, 3))
         if (_north != -1):
-            for i in range(_xps, _xpe + 1):
-                _nsendbuffer[i - _xps, 0] = self.u[i - _xms, _ype - _yms]
-                _nsendbuffer[i - _xps, 1] = self.v[i - _xms, _ype - _yms]
-                _nsendbuffer[i - _xps, 2] = self.h[i - _xms, _ype - _yms]
-        _ssendbuffer = np.zeros((_npx, 3))
+            self._copy_vector(self.u, self._nsendbuffer, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,0)}, domain=(_npx,1,1))
+            self._copy_vector(self.v, self._nsendbuffer, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,1)}, domain=(_npx,1,1))
+            self._copy_vector(self.h, self._nsendbuffer, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,2)}, domain=(_npx,1,1))
         if (_south != -1):
-            for i in range(_xps, _xpe + 1):
-                _ssendbuffer[i - _xps, 0] = self.u[i - _xms, _yps - _yms]
-                _ssendbuffer[i - _xps, 1] = self.v[i - _xms, _yps - _yms]
-                _ssendbuffer[i - _xps, 2] = self.h[i - _xms, _yps - _yms]
-        _wsendbuffer = np.zeros((_npy, 3))
+            self._copy_vector(self.u, self._ssendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,0)}, domain=(_npx,1,1))
+            self._copy_vector(self.v, self._ssendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,1)}, domain=(_npx,1,1))
+            self._copy_vector(self.h, self._ssendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,2)}, domain=(_npx,1,1))
         if (_west != -1):
-            for j in range(_yps, _ype + 1):
-                _wsendbuffer[j - _yps, 0] = self.u[_xps - _xms, j - _yms]
-                _wsendbuffer[j - _yps, 1] = self.v[_xps - _xms, j - _yms]
-                _wsendbuffer[j - _yps, 2] = self.h[_xps - _xms, j - _yms]
-        _esendbuffer = np.zeros((_npy, 3))
+            self._copy_vector(self.u, self._wsendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,0)}, domain=(1,_npy,1))
+            self._copy_vector(self.v, self._wsendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (1,0)}, domain=(1,_npy,1))
+            self._copy_vector(self.h, self._wsendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (2,0)}, domain=(1,_npy,1))
         if (_east != -1):
-            for j in range(_yps, _ype + 1):
-                _esendbuffer[j - _yps, 0] = self.u[_xpe - _xms, j - _yms]
-                _esendbuffer[j - _yps, 1] = self.v[_xpe - _xms, j - _yms]
-                _esendbuffer[j - _yps, 2] = self.h[_xpe - _xms, j - _yms]
+            self._copy_vector(self.u, self._esendbuffer, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (0,0)}, domain=(1,_npy,1))
+            self._copy_vector(self.v, self._esendbuffer, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (1,0)}, domain=(1,_npy,1))
+            self._copy_vector(self.h, self._esendbuffer, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (2,0)}, domain=(1,_npy,1))
 
         # Now post the non-blocking send half of the exchange
         if (_north != -1):
-            _irequests.append(_communicator.Isend(_nsendbuffer, _north, _ntag))
+            _irequests.append(_communicator.Isend(np.ascontiguousarray(self._nsendbuffer), _north, _ntag))
             _nrequests = _nrequests + 1
-
         if (_south != -1):
-            _irequests.append(_communicator.Isend(_ssendbuffer, _south, _stag))
+            _irequests.append(_communicator.Isend(np.ascontiguousarray(self._ssendbuffer), _south, _stag))
             _nrequests = _nrequests + 1
-
         if (_west != -1):
-            _irequests.append(_communicator.Isend(_wsendbuffer, _west, _wtag))
+            _irequests.append(_communicator.Isend(np.ascontiguousarray(self._wsendbuffer), _west, _wtag))
             _nrequests = _nrequests + 1
-
         if (_east != -1):
-            _irequests.append(_communicator.Isend(_esendbuffer, _east, _etag))
+            _irequests.append(_communicator.Isend(np.ascontiguousarray(self._esendbuffer), _east, _etag))
             _nrequests = _nrequests + 1
 
         # Wait for the exchange to complete
@@ -159,25 +163,21 @@ class ShallowWaterState:
 
         # Unpack the receive buffers
         if (_north != -1):
-            for i in range(_xps, _xpe + 1):
-                self.u[i - _xms, _yme - _yms] = _nrecvbuffer[i - _xps, 0]
-                self.v[i - _xms, _yme - _yms] = _nrecvbuffer[i - _xps, 1]
-                self.h[i - _xms, _yme - _yms] = _nrecvbuffer[i - _xps, 2]
+            self._copy_vector(self._nrecvbuffer, self.u, origin={"inField": (0,0), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1))
+            self._copy_vector(self._nrecvbuffer, self.v, origin={"inField": (0,1), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1))
+            self._copy_vector(self._nrecvbuffer, self.h, origin={"inField": (0,2), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1))
         if (_south != -1):
-            for i in range(_xps, _xpe + 1):
-                self.u[i - _xms, _yms - _yms] = _srecvbuffer[i - _xps, 0]
-                self.v[i - _xms, _yms - _yms] = _srecvbuffer[i - _xps, 1]
-                self.h[i - _xms, _yms - _yms] = _srecvbuffer[i - _xps, 2]
+            self._copy_vector(self._srecvbuffer, self.u, origin={"inField": (0,0), "outField": (_xps-_xms,0)}, domain=(_npx,1,1))
+            self._copy_vector(self._srecvbuffer, self.v, origin={"inField": (0,1), "outField": (_xps-_xms,0)}, domain=(_npx,1,1))
+            self._copy_vector(self._srecvbuffer, self.h, origin={"inField": (0,2), "outField": (_xps-_xms,0)}, domain=(_npx,1,1))
         if (_west != -1):
-            for j in range(_yps, _ype + 1):
-                self.u[_xms - _xms, j - _yms] = _wrecvbuffer[j - _yps, 0]
-                self.v[_xms - _xms, j - _yms] = _wrecvbuffer[j - _yps, 1]
-                self.h[_xms - _xms, j - _yms] = _wrecvbuffer[j - _yps, 2]
+            self._copy_vector(self._wrecvbuffer, self.u, origin={"inField": (0,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1))
+            self._copy_vector(self._wrecvbuffer, self.v, origin={"inField": (1,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1))
+            self._copy_vector(self._wrecvbuffer, self.h, origin={"inField": (2,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1))
         if (_east != -1):
-            for j in range(_yps, _ype + 1):
-                self.u[_xme - _xms, j - _yms] = _erecvbuffer[j - _yps, 0]
-                self.v[_xme - _xms, j - _yms] = _erecvbuffer[j - _yps, 1]
-                self.h[_xme - _xms, j - _yms] = _erecvbuffer[j - _yps, 2]
+            self._copy_vector(self._erecvbuffer, self.u, origin={"inField": (0,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1))
+            self._copy_vector(self._erecvbuffer, self.v, origin={"inField": (1,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1))
+            self._copy_vector(self._erecvbuffer, self.h, origin={"inField": (2,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1))
 
 
     # Scatter full state 
