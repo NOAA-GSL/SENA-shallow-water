@@ -1,4 +1,4 @@
-git+https://github.com/GridTools/gt4py.git@d0908cd8b1512d216dc29633bcd16638dbd71843#egg=gt4py
+git+https://github.com/GridTools/gt4py.git@d87666b384434c875a2ab8a2cd28a2bf2e0f77e1#egg=gt4py
 pytest
 pytest-mpi
 pyyaml

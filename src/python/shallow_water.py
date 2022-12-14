@@ -66,11 +66,12 @@ def run_shallow_water(config_file: str, filename=None):
 
     # Run the model
     for t in range(0, runtime['run_steps'], runtime['output_interval_steps']):
+        
         m.adv_nsteps(s, min(runtime['output_interval_steps'], runtime['run_steps'] - t))
+        
         if (runtime['output_interval_steps'] <= runtime['run_steps']):
             s.write(f"swout_{round(s.clock / m.dt):07d}.nc")
         print(f"t = {t}")
-
 
 def main():
     """Driver for the shallow water model that parses config file or restart file

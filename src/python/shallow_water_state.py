@@ -23,7 +23,7 @@ class ShallowWaterState:
 
         # Initialize u
         self.u = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                  dtype=self.float_type, backend=self.backend, default_origin=(1,1))
+                                  dtype=self.float_type, backend=self.backend)
         if (u) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):
@@ -31,7 +31,7 @@ class ShallowWaterState:
 
         # Initialize v
         self.v = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                  dtype=self.float_type, backend=self.backend, default_origin=(1,1))
+                                  dtype=self.float_type, backend=self.backend)
         if (v) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):
@@ -39,7 +39,7 @@ class ShallowWaterState:
 
         # Initialize h
         self.h = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                  dtype=self.float_type, backend=self.backend, default_origin=(1,1))
+                                  dtype=self.float_type, backend=self.backend)
         if (h) is not None:
             for i in range(geometry.xps, geometry.xpe + 1):
                 for j in range(geometry.yps, geometry.ype + 1):
@@ -58,14 +58,14 @@ class ShallowWaterState:
             self.clock = 0.0
 
         # Allocate send/recv buffers for halo exchanges
-        self._nsendbuffer = gt_storage.zeros(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-        self._ssendbuffer = gt_storage.zeros(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-        self._wsendbuffer = gt_storage.zeros(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-        self._esendbuffer = gt_storage.zeros(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-        self._nrecvbuffer = gt_storage.zeros(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-        self._srecvbuffer = gt_storage.zeros(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-        self._wrecvbuffer = gt_storage.zeros(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-        self._erecvbuffer = gt_storage.zeros(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+        self._nsendbuffer = gt_storage.zeros(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend)
+        self._ssendbuffer = gt_storage.zeros(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend)
+        self._wsendbuffer = gt_storage.zeros(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend)
+        self._esendbuffer = gt_storage.zeros(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend)
+        self._nrecvbuffer = gt_storage.zeros(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend)
+        self._srecvbuffer = gt_storage.zeros(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend)
+        self._wrecvbuffer = gt_storage.zeros(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend)
+        self._erecvbuffer = gt_storage.zeros(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend)
 
         # Define copy stencil for packing/unpacking halo exchange buffers
         def copy_vector(inField: self.field_type,

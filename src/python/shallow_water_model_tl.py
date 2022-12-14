@@ -23,7 +23,7 @@ class ShallowWaterModelTL:
 
         # Initialize the b array - Currently unused
         self.b = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
-                                  dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
+                                  dtype=self.float_type, backend=self.backend)
 
         # Define boundary_update stencil function
         def boundary_update(u      : self.field_type,
@@ -171,11 +171,11 @@ class ShallowWaterModelTL:
 
         # Create gt4py storages for the new model state
         _u_new = gt_storage.empty(shape=(_xme - _xms + 1, _yme -_yms + 1),
-                                  dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
+                                  dtype=self.float_type, backend=self.backend)
         _v_new = gt_storage.empty(shape=(_xme - _xms + 1, _yme -_yms + 1),
-                                  dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
+                                  dtype=self.float_type, backend=self.backend)
         _h_new = gt_storage.empty(shape=(_xme - _xms + 1, _yme -_yms + 1),
-                                  dtype=self.float_type, backend=self.backend, default_origin=(1, 1))
+                                  dtype=self.float_type, backend=self.backend)
 
         for n in range(nsteps):
             # Exchange halo
