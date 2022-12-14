@@ -19,7 +19,7 @@ class ShallowWaterModelTL:
         self.field_type = gtscript.Field[gtscript.IJ, self.float_type]
 
         # Set gravitational acceleration constant
-        g = 9.81
+        self.g = 9.81
 
         # Initialize the b array - Currently unused
         self.b = gt_storage.zeros(shape=(self.geometry.xme - self.geometry.xms + 1, self.geometry.yme - self.geometry.yms + 1),
