@@ -88,9 +88,9 @@ def test_shallow_water_model_adv_nsteps():
     model.adv_nsteps(state, 1)
 
     assert_almost_equal(state.clock, step * model.dt + model.dt)
-    assert_array_equal(state.u.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
-    assert_array_equal(state.v.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
-    assert_array_equal(state.h.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
+    assert_array_equal(state.u[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
+    assert_array_equal(state.v[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
+    assert_array_equal(state.h[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
 
     model.adv_nsteps(state, 2)
 
@@ -101,9 +101,9 @@ def test_shallow_water_model_adv_nsteps():
 
     model.adv_nsteps(state, 1)
 
-    assert_array_equal(state.u.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
-    assert_array_equal(state.v.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
-    assert_array_equal(state.h.data[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 10.0)
+    assert_array_equal(state.u[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
+    assert_array_equal(state.v[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 0.0)
+    assert_array_equal(state.h[xps-xms:xpe-xms+1, yps-yms:ype-yms+1], 10.0)
 
 @pytest.mark.mpi(min_size=1)
 def test_shallow_water_model_regression():
