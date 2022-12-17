@@ -6,9 +6,10 @@ class ShallowWaterGT4PyConfig:
     Can take the arguments backend & float_type directy to assign to the class, or accept a yaml filepath.
     """
     
-    def __init__(self, backend: str, float_type: type):
+    def __init__(self, backend: str, float_type: type, gpus_per_node=0):
         self.backend = backend
         self.float_type = float_type
+        self.gpus_per_node = gpus_per_node
   
     def __str__(self):
         newline = '\n'
@@ -25,7 +26,7 @@ class ShallowWaterGT4PyConfig:
             except yaml.YAMLError as e:
                 print(e)
         gt4py = config['gt4py']
-        swgtc = cls(gt4py['backend'], gt4py['float_type'])
+        swgtc = cls(gt4py['backend'], gt4py['float_type'], gt4py['gpus_per_node'])
         return swgtc
 
     @classmethod
@@ -36,5 +37,5 @@ class ShallowWaterGT4PyConfig:
             except yaml.YAMLError as e:
                 print(e)
         gt4py = config['gt4py']
-        swgtc = cls(gt4py['backend'], gt4py['float_type'])
+        swgtc = cls(gt4py['backend'], gt4py['float_type'], gt4py['gpus_per_node'])
         return swgtc

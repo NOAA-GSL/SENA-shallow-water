@@ -6,6 +6,7 @@ import argparse
 import yaml
 from mpi4py import MPI
 import numpy as np
+import os
 
 from shallow_water_geometry_config import ShallowWaterGeometryConfig
 from shallow_water_geometry import ShallowWaterGeometry
@@ -27,6 +28,11 @@ def run_shallow_water(config_file: str, filename=None):
     mc = ShallowWaterModelConfig.from_YAML_filename(config_file)
     gtc = ShallowWaterGT4PyConfig.from_YAML_filename(config_file)
     m = ShallowWaterModel(mc, gtc, g)
+
+    # Assign MPI rank to GPU
+    if (gtc.gpus_per_node > 0):
+        os.environ["CUDA_VISIBLE_DEVICES"]= f"{comm.Get_rank() % gtc.gpus_per_node}"
+        print(f"Set CUDA_VISIBLE_DEVICES={comm.Get_rank() % gtc.gpus_per_node}")
 
     # Read the configuration settings from config file
     with open(config_file, "r") as yamlFile: 

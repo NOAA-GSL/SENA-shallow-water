@@ -186,7 +186,8 @@ class ShallowWaterModel:
                                   dtdx=_dtdx,
                                   dtdy=_dtdy,
                                   origin=(0, 0),
-                                  domain=(_xme - _xms + 1, _yme - _yms + 1, 1))
+                                  domain=(_xme - _xms + 1, _yme - _yms + 1, 1),
+                                  validate_args=False)
 
             # Get new interior points
             self._interior_update(u=state.u,
@@ -199,7 +200,8 @@ class ShallowWaterModel:
                                   dtdx=_dtdx,
                                   dtdy=_dtdy,
                                   origin=(1, 1),
-                                  domain=(_xte - _xts + 1, _yte - _yts + 1, 1))
+                                  domain=(_xte - _xts + 1, _yte - _yts + 1, 1),
+                                  validate_args=False)
 
             # Update state with new state
             self._copy_update(u = state.u,
@@ -209,7 +211,8 @@ class ShallowWaterModel:
                               v_new = _v_new,
                               h_new = _h_new,
                               origin=(_xps - _xms, _yps - _yms),
-                              domain=(_xpe - _xps + 1, _ype - _yps + 1, 1))
+                              domain=(_xpe - _xps + 1, _ype - _yps + 1, 1),
+                              validate_args=False)
 
             # Update the clock
             state.advance_clock(self.dt)

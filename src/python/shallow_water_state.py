@@ -75,7 +75,7 @@ class ShallowWaterState:
             with computation(FORWARD), interval(...):
                 outField = inField
 
-        self._copy_vector = gtscript.stencil(definition=copy_vector, backend=self.backend)
+        self._copy_vector = gtscript.stencil(definition=copy_vector, backend=self.backend, device_sync=False)
 
     # Send boundaries to neighboring halos for each process
     def exchange_halo(self):
@@ -127,21 +127,21 @@ class ShallowWaterState:
 
         # Pack the send buffers
         if (_north != -1):
-            self._copy_vector(self.u, self._nsendbuffer, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,0)}, domain=(_npx,1,1))
-            self._copy_vector(self.v, self._nsendbuffer, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,1)}, domain=(_npx,1,1))
-            self._copy_vector(self.h, self._nsendbuffer, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,2)}, domain=(_npx,1,1))
+            self._copy_vector(self.u, self._nsendbuffer, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,0)}, domain=(_npx,1,1), validate_args=False)
+            self._copy_vector(self.v, self._nsendbuffer, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,1)}, domain=(_npx,1,1), validate_args=False)
+            self._copy_vector(self.h, self._nsendbuffer, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,2)}, domain=(_npx,1,1), validate_args=False)
         if (_south != -1):
-            self._copy_vector(self.u, self._ssendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,0)}, domain=(_npx,1,1))
-            self._copy_vector(self.v, self._ssendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,1)}, domain=(_npx,1,1))
-            self._copy_vector(self.h, self._ssendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,2)}, domain=(_npx,1,1))
+            self._copy_vector(self.u, self._ssendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,0)}, domain=(_npx,1,1), validate_args=False)
+            self._copy_vector(self.v, self._ssendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,1)}, domain=(_npx,1,1), validate_args=False)
+            self._copy_vector(self.h, self._ssendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,2)}, domain=(_npx,1,1), validate_args=False)
         if (_west != -1):
-            self._copy_vector(self.u, self._wsendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,0)}, domain=(1,_npy,1))
-            self._copy_vector(self.v, self._wsendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (1,0)}, domain=(1,_npy,1))
-            self._copy_vector(self.h, self._wsendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (2,0)}, domain=(1,_npy,1))
+            self._copy_vector(self.u, self._wsendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,0)}, domain=(1,_npy,1), validate_args=False)
+            self._copy_vector(self.v, self._wsendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (1,0)}, domain=(1,_npy,1), validate_args=False)
+            self._copy_vector(self.h, self._wsendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (2,0)}, domain=(1,_npy,1), validate_args=False)
         if (_east != -1):
-            self._copy_vector(self.u, self._esendbuffer, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (0,0)}, domain=(1,_npy,1))
-            self._copy_vector(self.v, self._esendbuffer, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (1,0)}, domain=(1,_npy,1))
-            self._copy_vector(self.h, self._esendbuffer, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (2,0)}, domain=(1,_npy,1))
+            self._copy_vector(self.u, self._esendbuffer, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (0,0)}, domain=(1,_npy,1), validate_args=False)
+            self._copy_vector(self.v, self._esendbuffer, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (1,0)}, domain=(1,_npy,1), validate_args=False)
+            self._copy_vector(self.h, self._esendbuffer, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (2,0)}, domain=(1,_npy,1), validate_args=False)
 
         # Now post the non-blocking send half of the exchange
         if (_north != -1):
@@ -163,21 +163,21 @@ class ShallowWaterState:
 
         # Unpack the receive buffers
         if (_north != -1):
-            self._copy_vector(self._nrecvbuffer, self.u, origin={"inField": (0,0), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1))
-            self._copy_vector(self._nrecvbuffer, self.v, origin={"inField": (0,1), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1))
-            self._copy_vector(self._nrecvbuffer, self.h, origin={"inField": (0,2), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1))
+            self._copy_vector(self._nrecvbuffer, self.u, origin={"inField": (0,0), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1), validate_args=False)
+            self._copy_vector(self._nrecvbuffer, self.v, origin={"inField": (0,1), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1), validate_args=False)
+            self._copy_vector(self._nrecvbuffer, self.h, origin={"inField": (0,2), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1), validate_args=False)
         if (_south != -1):
-            self._copy_vector(self._srecvbuffer, self.u, origin={"inField": (0,0), "outField": (_xps-_xms,0)}, domain=(_npx,1,1))
-            self._copy_vector(self._srecvbuffer, self.v, origin={"inField": (0,1), "outField": (_xps-_xms,0)}, domain=(_npx,1,1))
-            self._copy_vector(self._srecvbuffer, self.h, origin={"inField": (0,2), "outField": (_xps-_xms,0)}, domain=(_npx,1,1))
+            self._copy_vector(self._srecvbuffer, self.u, origin={"inField": (0,0), "outField": (_xps-_xms,0)}, domain=(_npx,1,1), validate_args=False)
+            self._copy_vector(self._srecvbuffer, self.v, origin={"inField": (0,1), "outField": (_xps-_xms,0)}, domain=(_npx,1,1), validate_args=False)
+            self._copy_vector(self._srecvbuffer, self.h, origin={"inField": (0,2), "outField": (_xps-_xms,0)}, domain=(_npx,1,1), validate_args=False)
         if (_west != -1):
-            self._copy_vector(self._wrecvbuffer, self.u, origin={"inField": (0,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1))
-            self._copy_vector(self._wrecvbuffer, self.v, origin={"inField": (1,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1))
-            self._copy_vector(self._wrecvbuffer, self.h, origin={"inField": (2,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1))
+            self._copy_vector(self._wrecvbuffer, self.u, origin={"inField": (0,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1), validate_args=False)
+            self._copy_vector(self._wrecvbuffer, self.v, origin={"inField": (1,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1), validate_args=False)
+            self._copy_vector(self._wrecvbuffer, self.h, origin={"inField": (2,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1), validate_args=False)
         if (_east != -1):
-            self._copy_vector(self._erecvbuffer, self.u, origin={"inField": (0,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1))
-            self._copy_vector(self._erecvbuffer, self.v, origin={"inField": (1,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1))
-            self._copy_vector(self._erecvbuffer, self.h, origin={"inField": (2,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1))
+            self._copy_vector(self._erecvbuffer, self.u, origin={"inField": (0,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1), validate_args=False)
+            self._copy_vector(self._erecvbuffer, self.v, origin={"inField": (1,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1), validate_args=False)
+            self._copy_vector(self._erecvbuffer, self.h, origin={"inField": (2,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1), validate_args=False)
 
 
     # Scatter full state 
