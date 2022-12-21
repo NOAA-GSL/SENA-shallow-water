@@ -8,9 +8,9 @@ from shallow_water_geometry import ShallowWaterGeometry
 
 # Check if CUDA is available
 try:
-    import cupy
+    import cupy as cp
 except ImportError:
-    cupy = None
+    cp = None
 
 class ShallowWaterState:
 
@@ -63,15 +63,40 @@ class ShallowWaterState:
         else:
             self.clock = 0.0
 
-        # Allocate send/recv buffers for halo exchanges
-        self._nsendbuffer = gt_storage.empty(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-        self._ssendbuffer = gt_storage.empty(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-        self._wsendbuffer = gt_storage.empty(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-        self._esendbuffer = gt_storage.empty(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-        self._nrecvbuffer = gt_storage.empty(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-        self._srecvbuffer = gt_storage.empty(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-        self._wrecvbuffer = gt_storage.empty(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-        self._erecvbuffer = gt_storage.empty(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+        # Run a deviceSynchronize() to check that the GPU is present and ready to run
+        if cp is not None and "gpu" in self.backend:
+            try:
+                cp.cuda.runtime.deviceSynchronize()
+                self._GPU_AVAILABLE = True
+            except cp.cuda.runtime.CUDARuntimeError:
+                self._GPU_AVAILABLE = False
+        else:
+            self._GPU_AVAILABLE = False
+
+        # Set up array method for use in MPI calls
+        if (self._GPU_AVAILABLE):
+            self._array = cp.array
+            self._empty_like = cp.empty_like
+            print("Using cp.array to create MPI buffers")
+        else:
+            self._array = np.array
+            self._empty_like = np.empty_like
+            print("Using np.array to create MPI buffers")
+
+        # Allocate send/recv storage and buffers for halo pack/unpack and exchanges
+        self._nsendstorage = gt_storage.empty(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+        self._nrecvbuff = self._empty_like(self._nsendstorage.data)
+        print(f"Initial empty nrecvbuf = {self._nrecvbuff[70:80, 2]}")
+
+        self._ssendstorage = gt_storage.empty(shape=(self.geometry.npx, 3), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+        self._srecvbuff = self._empty_like(self._ssendstorage.data)
+
+        self._wsendstorage = gt_storage.empty(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+        self._wrecvbuff = self._empty_like(self._wsendstorage.data)
+
+        self._esendstorage = gt_storage.empty(shape=(3, self.geometry.npy), dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+        self._erecvbuff = self._empty_like(self._esendstorage.data)
+
 
         # Define copy stencil for packing/unpacking halo exchange buffers
         def copy_vector(inField: self.field_type,
@@ -84,21 +109,13 @@ class ShallowWaterState:
         #self._copy_vector = gtscript.stencil(definition=copy_vector, backend=self.backend, device_sync=False)
         self._copy_vector = gtscript.stencil(definition=copy_vector, backend=self.backend)
 
-        # Run a deviceSynchronize() to check that the GPU is present and ready to run
-        if cupy is not None:
-            try:
-                cupy.cuda.runtime.deviceSynchronize()
-                self._GPU_AVAILABLE = True
-            except cupy.cuda.runtime.CUDARuntimeError:
-                self._GPU_AVAILABLE = False
-        else:
-            self._GPU_AVAILABLE = False
-
     # Transparent device memory synchronization
     def device_synchronize(self):
         """Synchronize all memory communication"""
         if self._GPU_AVAILABLE:
-            cupy.cuda.runtime.deviceSynchronize()
+            cp.cuda.runtime.deviceSynchronize()
+            cp.cuda.get_current_stream().synchronize()
+            #False
 
     # Send boundaries to neighboring halos for each process
     def exchange_halo(self):
@@ -132,90 +149,120 @@ class ShallowWaterState:
         _wtag = 3
         _etag = 4
 
-        # Syncrhonize memory before network communication
+        # Syncrhonize before MPI calls
         self.device_synchronize()
-
+        
         # Post the non-blocking receive half of the exhange first to reduce overhead
         _nrequests = 0
         _irequests = []
         if (_north != -1):
-            nrecvbuf = np.array(self._nrecvbuffer, dtype=self.float_type, ndmin=2)
-            _irequests.append(_communicator.Irecv(nrecvbuf, _north, _stag))
+            _irequests.append(_communicator.Irecv(self._nrecvbuff, _north, _stag))
             _nrequests = _nrequests + 1
         if (_south != -1):
-            srecvbuf = np.array(self._srecvbuffer, dtype=self.float_type, ndmin=2)
-            _irequests.append(_communicator.Irecv(srecvbuf, _south, _ntag))
+            _irequests.append(_communicator.Irecv(self._srecvbuff, _south, _ntag))
             _nrequests = _nrequests + 1
         if (_west != -1):
-            wrecvbuf = np.array(self._wrecvbuffer, dtype=self.float_type, ndmin=2)
-            _irequests.append(_communicator.Irecv(wrecvbuf, _west, _etag))
+            _irequests.append(_communicator.Irecv(self._wrecvbuff, _west, _etag))
             _nrequests = _nrequests + 1
         if (_east != -1):
-            erecvbuf = np.array(self._erecvbuffer, dtype=self.float_type, ndmin=2)
-            _irequests.append(_communicator.Irecv(erecvbuf, _east, _wtag))
+            _irequests.append(_communicator.Irecv(self._erecvbuff, _east, _wtag))
             _nrequests = _nrequests + 1
 
-        # Pack the send buffers
+        # Should not need this synchronize
+        self.device_synchronize()
+
+        # Pack the state variables into send storages
         if (_north != -1):
-            self._copy_vector(self.u, self._nsendbuffer, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,0)}, domain=(_npx,1,1), validate_args=False)
-            self._copy_vector(self.v, self._nsendbuffer, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,1)}, domain=(_npx,1,1), validate_args=False)
-            self._copy_vector(self.h, self._nsendbuffer, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,2)}, domain=(_npx,1,1), validate_args=False)
+            self._copy_vector(self.u, self._nsendstorage, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,0)}, domain=(_npx,1,1))
+            self._copy_vector(self.v, self._nsendstorage, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,1)}, domain=(_npx,1,1))
+            self._copy_vector(self.h, self._nsendstorage, origin={"inField": (_xps-_xms,_ype-_yms), "outField": (0,2)}, domain=(_npx,1,1))
         if (_south != -1):
-            self._copy_vector(self.u, self._ssendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,0)}, domain=(_npx,1,1), validate_args=False)
-            self._copy_vector(self.v, self._ssendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,1)}, domain=(_npx,1,1), validate_args=False)
-            self._copy_vector(self.h, self._ssendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,2)}, domain=(_npx,1,1), validate_args=False)
+            self._copy_vector(self.u, self._ssendstorage, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,0)}, domain=(_npx,1,1))
+            self._copy_vector(self.v, self._ssendstorage, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,1)}, domain=(_npx,1,1))
+            self._copy_vector(self.h, self._ssendstorage, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,2)}, domain=(_npx,1,1))
         if (_west != -1):
-            self._copy_vector(self.u, self._wsendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,0)}, domain=(1,_npy,1), validate_args=False)
-            self._copy_vector(self.v, self._wsendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (1,0)}, domain=(1,_npy,1), validate_args=False)
-            self._copy_vector(self.h, self._wsendbuffer, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (2,0)}, domain=(1,_npy,1), validate_args=False)
+            self._copy_vector(self.u, self._wsendstorage, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (0,0)}, domain=(1,_npy,1))
+            self._copy_vector(self.v, self._wsendstorage, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (1,0)}, domain=(1,_npy,1))
+            self._copy_vector(self.h, self._wsendstorage, origin={"inField": (_xps-_xms,_yps-_yms), "outField": (2,0)}, domain=(1,_npy,1))
         if (_east != -1):
-            self._copy_vector(self.u, self._esendbuffer, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (0,0)}, domain=(1,_npy,1), validate_args=False)
-            self._copy_vector(self.v, self._esendbuffer, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (1,0)}, domain=(1,_npy,1), validate_args=False)
-            self._copy_vector(self.h, self._esendbuffer, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (2,0)}, domain=(1,_npy,1), validate_args=False)
+            self._copy_vector(self.u, self._esendstorage, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (0,0)}, domain=(1,_npy,1))
+            self._copy_vector(self.v, self._esendstorage, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (1,0)}, domain=(1,_npy,1))
+            self._copy_vector(self.h, self._esendstorage, origin={"inField": (_xpe-_xms,_yps-_yms), "outField": (2,0)}, domain=(1,_npy,1))
+
+        # Should not need this synchronize
+        self.device_synchronize()
+
+        # Set up send buffers with proper layout
+        if (_north != -1):
+            self._nsendbuff = self._array(self._nsendstorage.data, dtype=self.float_type, ndmin=2)
+        if (_south != -1):
+            self._ssendbuff = self._array(self._ssendstorage.data, dtype=self.float_type, ndmin=2)
+        if (_west != -1):
+            self._wsendbuff = self._array(self._wsendstorage.data, dtype=self.float_type, ndmin=2)
+        if (_east != -1):
+            self._esendbuff = self._array(self._esendstorage.data, dtype=self.float_type, ndmin=2)
+
+        # Syncrhonize before MPI communication
+        self.device_synchronize()
 
         # Now post the non-blocking send half of the exchange
         if (_north != -1):
-            nsendbuf = np.array(self._nsendbuffer, dtype=self.float_type, ndmin=2)
-            _irequests.append(_communicator.Isend(nsendbuf, _north, _ntag))
+            _irequests.append(_communicator.Isend(self._nsendbuff, _north, _ntag))
             _nrequests = _nrequests + 1
         if (_south != -1):
-            ssendbuf = np.array(self._ssendbuffer, dtype=self.float_type, ndmin=2)
-            _irequests.append(_communicator.Isend(ssendbuf, _south, _stag))
+            _irequests.append(_communicator.Isend(self._ssendbuff, _south, _stag))
             _nrequests = _nrequests + 1
         if (_west != -1):
-            wsendbuf = np.array(self._wsendbuffer, dtype=self.float_type, ndmin=2)
-            _irequests.append(_communicator.Isend(wsendbuf, _west, _wtag))
+            _irequests.append(_communicator.Isend(self._wsendbuff, _west, _wtag))
             _nrequests = _nrequests + 1
         if (_east != -1):
-            esendbuf = np.array(self._esendbuffer, dtype=self.float_type, ndmin=2)
-            _irequests.append(_communicator.Isend(esendbuf, _east, _etag))
+            _irequests.append(_communicator.Isend(self._esendbuff, _east, _etag))
             _nrequests = _nrequests + 1
+
+        # Synchronize before MPI call
+        self.device_synchronize()
 
         # Wait for the exchange to complete
         if (_nrequests > 0):
             MPI.Request.Waitall(_irequests)
 
-        # Unpack the receive buffers
+        # Should not need this synchronization
+        self.device_synchronize()
+
+        # Create storages from the receive buffers
         if (_north != -1):
-            self._nrecvbuffer = gt_storage.from_array(nrecvbuf, dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-            self._copy_vector(self._nrecvbuffer, self.u, origin={"inField": (0,0), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1), validate_args=False)
-            self._copy_vector(self._nrecvbuffer, self.v, origin={"inField": (0,1), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1), validate_args=False)
-            self._copy_vector(self._nrecvbuffer, self.h, origin={"inField": (0,2), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1), validate_args=False)
+            print(f"nrecvbuff after Irecv is complete = {self._nrecvbuff[70:80, 2]}")
+            self._nrecvstorage = gt_storage.from_array(self._nrecvbuff, dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+            print(f"gt storage created from nrecvbuff using from_array() = {self._nrecvstorage[70:80, 2]}")
         if (_south != -1):
-            self._srecvbuffer = gt_storage.from_array(srecvbuf, dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-            self._copy_vector(self._srecvbuffer, self.u, origin={"inField": (0,0), "outField": (_xps-_xms,0)}, domain=(_npx,1,1), validate_args=False)
-            self._copy_vector(self._srecvbuffer, self.v, origin={"inField": (0,1), "outField": (_xps-_xms,0)}, domain=(_npx,1,1), validate_args=False)
-            self._copy_vector(self._srecvbuffer, self.h, origin={"inField": (0,2), "outField": (_xps-_xms,0)}, domain=(_npx,1,1), validate_args=False)
+            self._srecvstorage = gt_storage.from_array(self._srecvbuff, dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
         if (_west != -1):
-            self._wrecvbuffer = gt_storage.from_array(wrecvbuf, dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-            self._copy_vector(self._wrecvbuffer, self.u, origin={"inField": (0,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1), validate_args=False)
-            self._copy_vector(self._wrecvbuffer, self.v, origin={"inField": (1,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1), validate_args=False)
-            self._copy_vector(self._wrecvbuffer, self.h, origin={"inField": (2,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1), validate_args=False)
+            self._wrecvstorage = gt_storage.from_array(self._wrecvbuff, dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
         if (_east != -1):
-            self._erecvbuffer = gt_storage.from_array(erecvbuf, dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
-            self._copy_vector(self._erecvbuffer, self.u, origin={"inField": (0,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1), validate_args=False)
-            self._copy_vector(self._erecvbuffer, self.v, origin={"inField": (1,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1), validate_args=False)
-            self._copy_vector(self._erecvbuffer, self.h, origin={"inField": (2,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1), validate_args=False)
+            self._erecvstorage = gt_storage.from_array(self._erecvbuff, dtype=self.float_type, backend=self.backend, default_origin=(0, 0))
+
+        # Unpack the storages into the state variables
+        if (_north != -1):
+            self._copy_vector(self._nrecvstorage, self.u, origin={"inField": (0,0), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1))
+            self._copy_vector(self._nrecvstorage, self.v, origin={"inField": (0,1), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1))
+            print(f"state variable h before unpack stencil call = {self.h[70:80, _yme-_yms]}")
+            self._copy_vector(self._nrecvstorage, self.h, origin={"inField": (0,2), "outField": (_xps-_xms,_yme-_yms)}, domain=(_npx,1,1))
+            print(f"state variable h after unpack stencil call = {self.h[70:80, _yme-_yms]}")
+        if (_south != -1):
+            self._copy_vector(self._srecvstorage, self.u, origin={"inField": (0,0), "outField": (_xps-_xms,0)}, domain=(_npx,1,1))
+            self._copy_vector(self._srecvstorage, self.v, origin={"inField": (0,1), "outField": (_xps-_xms,0)}, domain=(_npx,1,1))
+            self._copy_vector(self._srecvstorage, self.h, origin={"inField": (0,2), "outField": (_xps-_xms,0)}, domain=(_npx,1,1))
+        if (_west != -1):
+            self._copy_vector(self._wrecvstorage, self.u, origin={"inField": (0,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1))
+            self._copy_vector(self._wrecvstorage, self.v, origin={"inField": (1,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1))
+            self._copy_vector(self._wrecvstorage, self.h, origin={"inField": (2,0), "outField": (0,_yps-_yms)}, domain=(1,_npy,1))
+        if (_east != -1):
+            self._copy_vector(self._erecvstorage, self.u, origin={"inField": (0,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1))
+            self._copy_vector(self._erecvstorage, self.v, origin={"inField": (1,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1))
+            self._copy_vector(self._erecvstorage, self.h, origin={"inField": (2,0), "outField": (_xme-_xms,_yps-_yms)}, domain=(1,_npy,1))
+
+        # Should not need this synchronization
+        self.device_synchronize()
 
 
     # Scatter full state 
